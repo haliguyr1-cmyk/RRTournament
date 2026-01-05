@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rush Royale Tournament</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-3xl">🏆</span>
+                    <span class="text-xl font-bold">Rush Royale Tournament</span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#home" class="hover:text-yellow-300 transition-colors font-semibold">Home</a>
+                    <a href="#register" class="hover:text-yellow-300 transition-colors font-semibold">Register</a>
+                    <a href="#divisions" class="hover:text-yellow-300 transition-colors font-semibold">Divisions</a>
+                    <a href="#schedule" class="hover:text-yellow-300 transition-colors font-semibold">Schedule</a>
+                    <a href="#results" class="hover:text-yellow-300 transition-colors font-semibold">Results</a>
+                    <a href="#how-it-works" class="hover:text-yellow-300 transition-colors font-semibold">How It Works</a>
+                </div>
+                <button id="mobile-menu-btn" class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <a href="#home" class="block py-2 hover:text-yellow-300">Home</a>
+                <a href="#register" class="block py-2 hover:text-yellow-300">Register</a>
+                <a href="#divisions" class="block py-2 hover:text-yellow-300">Divisions</a>
+                <a href="#schedule" class="block py-2 hover:text-yellow-300">Schedule</a>
+                <a href="#results" class="block py-2 hover:text-yellow-300">Results</a>
+                <a href="#how-it-works" class="block py-2 hover:text-yellow-300">How It Works</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">Welcome to Rush Royale Tournament</h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">Compete in the ultimate Rush Royale competitive experience!</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#register" class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors">
+                    Register Now 🎮
+                </a>
+                <a href="#how-it-works" class="bg-transparent border-2 border-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                    Learn More 📖
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Tournament Features</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-hover bg-gradient-to-br from-blue-500 to-purple-600 text-white p-8 rounded-xl text-center">
+                    <div class="text-5xl mb-4">⚔️</div>
+                    <h3 class="text-2xl font-bold mb-4">Competitive Brackets</h3>
+                    <p class="opacity-90">Single-elimination format with strength-based matchmaking for fair competition</p>
+                </div>
+                <div class="card-hover bg-gradient-to-br from-pink-500 to-red-600 text-white p-8 rounded-xl text-center">
+                    <div class="text-5xl mb-4">🎯</div>
+                    <h3 class="text-2xl font-bold mb-4">Six Divisions</h3>
+                    <p class="opacity-90">From Lightweight to Champion - compete at your skill level</p>
+                </div>
+                <div class="card-hover bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-8 rounded-xl text-center">
+                    <div class="text-5xl mb-4">🌍</div>
+                    <h3 class="text-2xl font-bold mb-4">Global Communities</h3>
+                    <p class="opacity-90">Join your community and battle for glory!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Communities Section -->
+    <section class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">🏛️ Our Communities</h2>
+            <div id="communities-container" class="flex flex-wrap justify-center gap-6">
+                <div class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+                    🌟 Shinning Stars
+                </div>
+                <div class="bg-purple-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+                    🦁 Empires Gaming
+                </div>
+                <div class="bg-red-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+                    🥷 Ronin Gaming
+                </div>
+            </div>
+            <p class="text-center text-gray-600 mt-6 text-sm">
+                Don't see your community? It will be added when you register!
+            </p>
+        </div>
+    </section>
+
+    <!-- Divisions Section -->
+    <section id="divisions" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">🏅 Tournament Divisions</h2>
+            <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+                <table class="w-full">
+                    <thead class="gradient-bg text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Division</th>
+                            <th class="px-6 py-4 text-left">Total Strength Range</th>
+                            <th class="px-6 py-4 text-center">Players</th>
+                        </tr>
+                    </thead>
+                    <tbody id="divisions-table">
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">🪶 Lightweight</td>
+                            <td class="px-6 py-4">0 - 499</td>
+                            <td class="px-6 py-4 text-center" id="div-lightweight">-</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">⚓ Cruiserweight</td>
+                            <td class="px-6 py-4">500 - 999</td>
+                            <td class="px-6 py-4 text-center" id="div-cruiserweight">-</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">🥊 Middleweight</td>
+                            <td class="px-6 py-4">1000 - 1499</td>
+                            <td class="px-6 py-4 text-center" id="div-middleweight">-</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">🏋️ Heavyweight</td>
+                            <td class="px-6 py-4">1500 - 1999</td>
+                            <td class="px-6 py-4 text-center" id="div-heavyweight">-</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">💪 Super Heavyweight</td>
+                            <td class="px-6 py-4">2000 - 2499</td>
+                            <td class="px-6 py-4 text-center" id="div-superheavyweight">-</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-semibold">👑 Champion</td>
+                            <td class="px-6 py-4">2500+</td>
+                            <td class="px-6 py-4 text-center" id="div-champion">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Detailed Division View -->
+            <div id="division-details" class="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Section -->
+    <section id="register" class="py-16 bg-gradient-to-br from-purple-50 to-blue-50">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-8 text-gray-800">📝 Register for Tournament</h2>
+            <div class="bg-white rounded-xl shadow-2xl p-8">
+                <div class="text-center mb-8">
+                    <p class="text-lg text-gray-600 mb-6">Choose your registration method:</p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <a href="#" onclick="openDiscordRegistration()" class="card-hover bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-xl text-center block">
+                            <div class="text-5xl mb-4">💬</div>
+                            <h3 class="text-2xl font-bold mb-2">Discord Registration</h3>
+                            <p class="opacity-90">Register directly through our Discord bot</p>
+                        </a>
+                        <a href="register.html" class="card-hover bg-gradient-to-r from-green-500 to-teal-600 text-white p-8 rounded-xl text-center block">
+                            <div class="text-5xl mb-4">🌐</div>
+                            <h3 class="text-2xl font-bold mb-2">Browser Registration</h3>
+                            <p class="opacity-90">Complete registration form in your browser</p>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border-2 border-blue-500 rounded-lg p-6">
+                    <h3 class="font-bold text-lg mb-3 text-blue-900">💪 New Strength-Based System</h3>
+                    <p class="text-gray-700 mb-3">Your division is determined by <strong>Total Strength</strong>, calculated from:</p>
+                    <ul class="space-y-2 text-gray-700">
+                        <li>• <strong>Critical Damage</strong> (with Pantheon bonuses from cards like Twins, Valkerie, Phoenix)</li>
+                        <li>• <strong>Legendarity</strong> (sum of your legendary card levels)</li>
+                        <li>• <strong>Perks Level</strong> (your total perks)</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-white rounded">
+                        <p class="text-sm font-mono text-gray-600">
+                            Total Strength = (Adjusted Crit × 40%) + (Legendarity × 40%) + (Perks × 20%)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Schedule Section -->
+    <section id="schedule" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">📅 Match Schedule</h2>
+            
+            <div class="mb-8 text-center">
+                <select id="division-filter" class="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold focus:border-purple-500 outline-none">
+                    <option value="">All Divisions</option>
+                    <option value="Lightweight">🪶 Lightweight</option>
+                    <option value="Cruiserweight">⚓ Cruiserweight</option>
+                    <option value="Middleweight">🥊 Middleweight</option>
+                    <option value="Heavyweight">🏋️ Heavyweight</option>
+                    <option value="Super Heavyweight">💪 Super Heavyweight</option>
+                    <option value="Champion">👑 Champion</option>
+                </select>
+            </div>
+
+            <div id="schedule-container" class="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="p-12 text-center text-gray-500">
+                    <div class="text-6xl mb-4">📋</div>
+                    <p class="text-xl">No matches scheduled yet</p>
+                    <p class="text-sm mt-2">Check back after tournament brackets are generated</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results" class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">🏆 Tournament Results</h2>
+            <div id="results-container" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-xl p-12 text-center text-gray-500">
+                    <div class="text-6xl mb-4">🥇</div>
+                    <p class="text-xl">No results yet</p>
+                    <p class="text-sm mt-2">Winners will be displayed here after tournament completion</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">📋 How It Works</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Register</h3>
+                    <p class="text-gray-600">Fill out the registration form with your player details, stats, and deck</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-gradient-to-br from-purple-500 to-pink-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Get Approved</h3>
+                    <p class="text-gray-600">Tournament staff will review and approve your registration in Discord</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-gradient-to-br from-pink-500 to-red-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Check Schedule</h3>
+                    <p class="text-gray-600">View your match times and opponents in the schedule section</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-gradient-to-br from-cyan-500 to-blue-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">4</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Compete!</h3>
+                    <p class="text-gray-600">Battle your way to the top and claim victory in your division</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-lg mb-2">🏆 Rush Royale Tournament</p>
+            <p class="opacity-75 text-sm">Powered by competitive spirit and community passion</p>
+            <p class="opacity-75 text-sm mt-4">© 2025 Rush Royale Tournament. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    // Close mobile menu if open
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                }
+            });
+        });
+
+        // TODO: Replace with your actual server ID
+        const GUILD_ID = '1234567890';
+
+        function openDiscordRegistration() {
+            alert('Please use the Discord bot to register!\n\nGo to your Discord server and click the "Register as Participant" button.');
+        }
+
+        // Load division data (would connect to your API)
+        async function loadDivisions() {
+            // TODO: Connect to your API endpoint
+            // For now, show placeholder
+            console.log('Loading divisions for guild:', GUILD_ID);
+        }
+
+        // Load communities dynamically
+        async function loadCommunities() {
+            try {
+                // TODO: Replace with your actual API endpoint
+                // const response = await fetch(`/api/communities?guild_id=${GUILD_ID}`);
+                // const data = await response.json();
+                
+                // For now, show default communities
+                const communities = [
+                    { name: 'Shinning Stars', emoji: '🌟', color: 'bg-yellow-400 text-gray-900' },
+                    { name: 'Empires Gaming', emoji: '🦁', color: 'bg-purple-600 text-white' },
+                    { name: 'Ronin Gaming', emoji: '🥷', color: 'bg-red-500 text-white' }
+                ];
+                
+                const container = document.getElementById('communities-container');
+                container.innerHTML = '';
+                
+                communities.forEach(comm => {
+                    const badge = document.createElement('div');
+                    badge.className = `${comm.color} px-8 py-4 rounded-full font-bold text-lg shadow-lg`;
+                    badge.textContent = `${comm.emoji} ${comm.name}`;
+                    container.appendChild(badge);
+                });
+                
+            } catch (error) {
+                console.error('Error loading communities:', error);
+            }
+        }
+
+        // Load schedule (would connect to your API)
+        async function loadSchedule() {
+            const division = document.getElementById('division-filter').value;
+            // TODO: Connect to your API endpoint
+            console.log('Loading schedule for division:', division);
+        }
+
+        // Load results (would connect to your API)
+        async function loadResults() {
+            // TODO: Connect to your API endpoint
+            console.log('Loading results for guild:', GUILD_ID);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCommunities();
+            loadDivisions();
+            loadSchedule();
+            loadResults();
+        });
+
+        // Division filter change
+        document.getElementById('division-filter').addEventListener('change', loadSchedule);
+    </script>
+</body>
+</html>
