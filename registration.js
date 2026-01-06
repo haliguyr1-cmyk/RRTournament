@@ -158,6 +158,12 @@ function populateHeroItems() {
     
     heroItemSelect.innerHTML = '<option value="">Select hero item...</option>';
     
+    // Add "None" option first
+    const noneOption = document.createElement('option');
+    noneOption.value = 'None';
+    noneOption.textContent = '❌ No Hero Item';
+    heroItemSelect.appendChild(noneOption);
+    
     ALL_HERO_ITEMS.forEach(item => {
         const option = document.createElement('option');
         option.value = item;
