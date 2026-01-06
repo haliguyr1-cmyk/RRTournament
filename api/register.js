@@ -1,4 +1,4 @@
-// api/register.js - Send registration to Discord webhook
+// api/register.js - Send registration to Discord webhook with approval buttons
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -54,9 +54,9 @@ export default async function handler(req, res) {
         
         // Create embed for Discord
         const embed = {
-            title: "🌐 New Browser Registration",
+            title: "🌐 New Browser Registration - PENDING APPROVAL",
             description: `Registration from <@${discord_id}>`,
-            color: 0x00ff00,
+            color: 0xFFA500, // Orange for pending
             fields: [
                 { name: "Discord User", value: `<@${discord_id}>`, inline: true },
                 { name: "Username", value: username || 'N/A', inline: true },
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
             ],
             timestamp: new Date().toISOString(),
             footer: {
-                text: `User ID: ${discord_id} | Source: Browser`
+                text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
             }
         };
         
@@ -113,6 +113,33 @@ export default async function handler(req, res) {
             inline: false
         });
         
+        // Create approval buttons - MUST match Python bot's custom_ids
+        const components = [
+            {
+                type: 1, // Action Row
+                components: [
+                    {
+                        type: 2, // Button
+                        style: 3, // Green/Success
+                        label: "✅ Approve Registration",
+                        custom_id: "approve_browser_reg"  // Matches Python handler
+                    },
+                    {
+                        type: 2, // Button
+                        style: 4, // Red/Danger
+                        label: "❌ Reject Registration",
+                        custom_id: "reject_browser_reg"  // Matches Python handler
+                    },
+                    {
+                        type: 2, // Button
+                        style: 1, // Blue/Primary
+                        label: "📋 Copy Export Code",
+                        custom_id: "copy_export_code"  // Matches Python handler
+                    }
+                ]
+            }
+        ];
+        
         // Send to Discord webhook
         console.log('Sending to Discord webhook...');
         const webhookResponse = await fetch(webhookUrl, {
@@ -121,8 +148,9 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                content: `🌐 **New Browser Registration** - <@${discord_id}>`,
-                embeds: [embed]
+                content: `🌐 **New Browser Registration** - <@${discord_id}> - ⏳ **PENDING APPROVAL**`,
+                embeds: [embed],
+                components: components
             })
         });
         
@@ -136,7 +164,7 @@ export default async function handler(req, res) {
         
         return res.status(200).json({
             success: true,
-            message: 'Registration submitted successfully! Check Discord for approval.'
+            message: 'Registration submitted successfully! Waiting for moderator approval in Discord.'
         });
         
     } catch (error) {
