@@ -1,4 +1,4 @@
-// registration.js - FIXED: Communities, Hero Items, Cards
+// registration.js - FIXED: Form clearing, proper flow, and all issues
 
 const PANTHEON_BONUSES = {
     "Twins": 0.20,
@@ -29,7 +29,6 @@ const ALL_CARDS = [
     "Lightning Mage", "Poisoner", "Rogue", "Thrower"
 ].sort();
 
-// Hero items mapped to heroes
 const HERO_ITEMS_MAP = {
     "Lucia (Legendary)": "Shadow Blade",
     "Necromancer (Legendary)": "Ethereal Phylactery",
@@ -158,7 +157,6 @@ function populateHeroItems() {
     
     heroItemSelect.innerHTML = '<option value="">Select hero item...</option>';
     
-    // Add "None" option first
     const noneOption = document.createElement('option');
     noneOption.value = 'None';
     noneOption.textContent = '❌ No Hero Item';
@@ -186,7 +184,6 @@ function generateCardInputs() {
             continue;
         }
         
-        // Populate card names
         nameSelect.innerHTML = '<option value="">Select card...</option>';
         ALL_CARDS.forEach(card => {
             const option = document.createElement('option');
@@ -195,7 +192,6 @@ function generateCardInputs() {
             nameSelect.appendChild(option);
         });
         
-        // Populate levels (1-15)
         levelSelect.innerHTML = '<option value="">Level...</option>';
         for (let j = 1; j <= 15; j++) {
             const option = document.createElement('option');
@@ -204,7 +200,6 @@ function generateCardInputs() {
             levelSelect.appendChild(option);
         }
         
-        // Add event listeners
         nameSelect.addEventListener('change', function() {
             formData.cards[i].name = this.value;
             updateCardLevelOptions(i, this.value);
@@ -263,7 +258,6 @@ function loadCommunities() {
     console.log('Loading communities...');
     const communitySelect = document.getElementById('community');
     
-    // Default communities
     const communities = [
         { name: 'Shinning Stars', emoji: '🌟' },
         { name: 'Empires Gaming', emoji: '🦁' },
@@ -331,7 +325,6 @@ function handleHeroChange() {
     const selectedHero = heroSelect.value;
     
     if (selectedHero && HERO_ITEMS_MAP[selectedHero]) {
-        // Auto-select the hero's item
         const defaultItem = HERO_ITEMS_MAP[selectedHero];
         heroItemSelect.value = defaultItem;
         formData.hero_item = defaultItem;
@@ -340,7 +333,6 @@ function handleHeroChange() {
 }
 
 function attachEventListeners() {
-    // Stats fields
     ['crit_level', 'legendarity', 'perks_level'].forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -351,13 +343,11 @@ function attachEventListeners() {
         }
     });
     
-    // Community selection
     const communitySelect = document.getElementById('community');
     if (communitySelect) {
         communitySelect.addEventListener('change', handleCommunityChange);
     }
     
-    // Hero selection with auto item selection
     const heroSelect = document.getElementById('hero');
     if (heroSelect) {
         heroSelect.addEventListener('change', function() {
@@ -366,7 +356,6 @@ function attachEventListeners() {
         });
     }
     
-    // Other form fields
     ['username', 'game_username', 'game_id', 'timezone', 'hero_level', 'hero_item', 'hero_item_level'].forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -381,7 +370,6 @@ function attachEventListeners() {
         }
     });
     
-    // Form submission
     const form = document.getElementById('registration-form');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
@@ -512,7 +500,6 @@ async function handleFormSubmit(e) {
     console.log('✅ All validations passed!');
     console.log('Calculated strength:', calculatedStrength);
     
-    // Generate export code
     const parts = [
         formData.game_username,
         formData.game_id,
@@ -633,6 +620,63 @@ function copyExportCode() {
     }).catch(() => {
         showAlert('Failed to copy. Please select and copy manually.', 'error');
     });
+}
+
+// FIXED: Clear form function
+function clearFormAndRestart() {
+    // Reset form data
+    formData = {
+        discord_id: formData.discord_id,  // Keep Discord ID and guild ID
+        username: formData.username,
+        guild_id: formData.guild_id,
+        game_username: '',
+        game_id: '',
+        crit_level: '',
+        legendarity: '',
+        perks_level: '',
+        timezone: 'UTC-05:00',
+        community: '',
+        hero: '',
+        hero_level: '',
+        hero_item: '',
+        hero_item_level: '',
+        cards: [
+            { name: '', level: '' },
+            { name: '', level: '' },
+            { name: '', level: '' },
+            { name: '', level: '' },
+            { name: '', level: '' }
+        ]
+    };
+    
+    calculatedStrength = null;
+    
+    // Reset form UI
+    const form = document.getElementById('registration-form');
+    form.reset();
+    
+    // Restore Discord ID and username
+    if (formData.discord_id) {
+        document.getElementById('discord_id').value = formData.discord_id;
+    }
+    if (formData.username) {
+        document.getElementById('username').value = formData.username;
+    }
+    
+    // Hide strength display
+    document.getElementById('strength-display').classList.add('hidden');
+    
+    // Hide modal
+    document.getElementById('success-modal').classList.add('hidden');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Re-initialize everything
+    loadCommunities();
+    generateCardInputs();
+    
+    console.log('✅ Form cleared and ready for new registration');
 }
 
 function showAlert(message, type) {
