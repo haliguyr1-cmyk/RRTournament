@@ -86,11 +86,11 @@
                         <div>
                             <label class="block font-semibold mb-2">Discord User ID *</label>
                             <input type="text" id="discord_id" required class="w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none" placeholder="123456789012345678">
-                            <p class="text-xs text-gray-500 mt-1">Enable Developer Mode in Discord Settings</p>
+                            <p class="text-xs text-gray-500 mt-1">Pre-filled from Discord link</p>
                         </div>
                         <div>
                             <label class="block font-semibold mb-2">Discord Username</label>
-                            <input type="text" id="username" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none" placeholder="YourName#1234">
+                            <input type="text" id="username" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none" placeholder="YourName">
                         </div>
                         <div>
                             <label class="block font-semibold mb-2">Game Username *</label>
@@ -103,7 +103,7 @@
                         <div id="community-container">
                             <label class="block font-semibold mb-2">Community *</label>
                             <select id="community" required class="w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none">
-                                <option value="">Loading communities...</option>
+                                <option value="">Select community...</option>
                             </select>
                         </div>
                         <div>
@@ -188,14 +188,16 @@
                     </div>
                     <div class="grid md:grid-cols-2 gap-4 mt-4">
                         <div>
-                            <label class="block font-semibold mb-2">Hero Item *</label>
-                            <input type="text" id="hero_item" required class="w-full p-3 border-2 rounded-lg focus:border-purple-500 outline-none" placeholder="e.g., Bubble Wand, Lightning Rod">
-                            <p class="text-xs text-gray-500 mt-1">The equipment your hero uses</p>
+                            <label class="block font-semibold mb-2">Hero Item</label>
+                            <select id="hero_item" class="w-full p-3 border-2 rounded-lg focus:border-purple-500 outline-none">
+                                <option value="">Select hero item...</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Auto-selected based on hero</p>
                         </div>
                         <div>
-                            <label class="block font-semibold mb-2">Hero Item Level *</label>
-                            <input type="number" id="hero_item_level" min="1" max="20" required class="w-full p-3 border-2 rounded-lg focus:border-purple-500 outline-none">
-                            <p class="text-xs text-gray-500 mt-1">Current level of the item</p>
+                            <label class="block font-semibold mb-2">Hero Item Level</label>
+                            <input type="number" id="hero_item_level" min="1" max="20" class="w-full p-3 border-2 rounded-lg focus:border-purple-500 outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if no item</p>
                         </div>
                     </div>
                 </div>
@@ -205,96 +207,7 @@
                     <h2 class="text-2xl font-bold text-pink-900 mb-4">🃏 Your Deck (5 Cards)</h2>
                     <p class="text-gray-600 mb-4">Select all 5 cards in your deck and their levels</p>
                     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="cards-container">
-                        <!-- Card 1 -->
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h3 class="font-bold mb-3 text-gray-700">Card 1</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Card Name *</label>
-                                    <select id="card0_name" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Select card...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Level *</label>
-                                    <select id="card0_level" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Level...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 2 -->
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h3 class="font-bold mb-3 text-gray-700">Card 2</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Card Name *</label>
-                                    <select id="card1_name" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Select card...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Level *</label>
-                                    <select id="card1_level" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Level...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 3 -->
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h3 class="font-bold mb-3 text-gray-700">Card 3</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Card Name *</label>
-                                    <select id="card2_name" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Select card...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Level *</label>
-                                    <select id="card2_level" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Level...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 4 -->
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h3 class="font-bold mb-3 text-gray-700">Card 4</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Card Name *</label>
-                                    <select id="card3_name" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Select card...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Level *</label>
-                                    <select id="card3_level" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Level...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 5 -->
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h3 class="font-bold mb-3 text-gray-700">Card 5</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Card Name *</label>
-                                    <select id="card4_name" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Select card...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1 text-gray-600">Level *</label>
-                                    <select id="card4_level" required class="w-full p-2 border-2 rounded focus:border-pink-500 outline-none text-sm">
-                                        <option value="">Level...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Card slots will be generated by JavaScript -->
                     </div>
                 </div>
 
@@ -342,335 +255,7 @@
         </div>
     </div>
 
-    <script>
-// registration.js - Tournament Registration Form Logic
-
-const PANTHEON_BONUSES = {
-    "Twins": 0.20,
-    "Valkerie": 0.40,
-    "Phoenix": 0.20,
-    "Twilight Ranger": 0.20,
-    "Franky & Stein": 0.20
-};
-
-const LEGENDARY_CARDS = [
-    "Banshee", "Bard", "Bruiser", "Blade Dancer", "Boreas", "Corsair", "Cultist",
-    "Demon Hunter", "Demonologist", "Spirit Master", "Dryad", "Franky & Stein",
-    "Frost", "Gun Slinger", "Harlequin", "Inquisitor", "Genie", "Hex",
-    "Knight Statue", "Kobold", "Twilight Ranger", "Clock", "Meteor", "Minotaur",
-    "Monk", "Swords", "Phoenix", "Riding Hood", "Robot", "Scrapper", "Stasis",
-    "Summoner", "Tesla", "Trapper", "Treant", "Sea Dog", "Twins", "Witch", "Shaman",
-    "Valkerie"
-];
-
-const ALL_CARDS = [
-    ...LEGENDARY_CARDS,
-    "Catapult", "Clown", "Crystalmancer", "Earth Elemental", "Cold Elemental",
-    "Engineer", "Gargoyle", "Executioner", "Mime", "Plague Doctor", "Ivy",
-    "Portal Keeper", "Pyrotechnic", "Reaper", "Portal Mage", "Thunderer",
-    "Vampire", "Wind Archer", "Alchemist", "Banner", "Magic Cauldron", "Chemist",
-    "Grindstone", "Priestess", "Sentry", "Sharpshooter", "Zealot",
-    "Archer", "Bombardier", "Cold Mage", "Fire Mage", "Hunter",
-    "Lightning Mage", "Poisoner", "Rogue", "Thrower"
-].sort();
-
-const DEFAULT_WEIGHTS = { crit: 0.40, legendarity: 0.40, perks: 0.20 };
-const DEFAULT_THRESHOLDS = {
-    "Lightweight": [0, 499],
-    "Cruiserweight": [500, 999],
-    "Middleweight": [1000, 1499],
-    "Heavyweight": [1500, 1999],
-    "Super Heavyweight": [2000, 2499],
-    "Champion": [2500, 10000]
-};
-
-let formData = {
-    discord_id: '',
-    username: '',
-    guild_id: '',
-    game_username: '',
-    game_id: '',
-    crit_level: '',
-    legendarity: '',
-    perks_level: '',
-    timezone: 'UTC-05:00',
-    community: '',
-    hero: '',
-    hero_level: '',
-    hero_item: '',
-    hero_item_level: '',
-    cards: [
-        { name: '', level: '' },
-        { name: '', level: '' },
-        { name: '', level: '' },
-        { name: '', level: '' },
-        { name: '', level: '' }
-    ]
-};
-
-let calculatedStrength = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    initializeForm();
-    populateURLParams();
-    generateCardInputs();
-    attachEventListeners();
-});
-
-function populateURLParams() {
-    const params = new URLSearchParams(window.location.search);
-    const discord_id = params.get('discord_id');
-    const username = params.get('username');
-    const guild_id = params.get('guild_id');
-    
-    if (discord_id) {
-        document.getElementById('discord_id').value = discord_id;
-        formData.discord_id = discord_id;
-        const input = document.getElementById('discord_id');
-        input.style.backgroundColor = '#e8f5e9';
-        input.style.borderColor = '#4caf50';
-    }
-    
-    if (username) {
-        document.getElementById('username').value = decodeURIComponent(username);
-        formData.username = decodeURIComponent(username);
-    }
-    
-    if (guild_id) {
-        formData.guild_id = guild_id;
-        document.getElementById('server-status').classList.remove('hidden');
-        document.getElementById('server-id').textContent = `Server ID: ${guild_id}`;
-    }
-}
-
-function initializeForm() {
-    document.getElementById('discord_id').addEventListener('input', function(e) {
-        const original = this.value;
-        this.value = this.value.replace(/[^0-9]/g, '');
-        
-        if (original !== this.value) {
-            showAlert('Discord ID can only contain numbers!', 'error');
-        }
-        
-        if (this.value.length > 0 && this.value.length < 17) {
-            this.setCustomValidity('Discord ID must be at least 17 digits');
-        } else if (this.value.length > 20) {
-            this.setCustomValidity('Discord ID is too long (max 20 digits)');
-            this.value = this.value.substring(0, 20);
-        } else {
-            this.setCustomValidity('');
-        }
-        
-        formData.discord_id = this.value;
-    });
-}
-
-function generateCardInputs() {
-    // Populate all 5 card dropdowns with cards
-    for (let i = 0; i < 5; i++) {
-        const nameSelect = document.getElementById(`card${i}_name`);
-        const levelSelect = document.getElementById(`card${i}_level`);
-        
-        // Populate card names
-        nameSelect.innerHTML = '<option value="">Select card...</option>';
-        ALL_CARDS.forEach(card => {
-            const option = document.createElement('option');
-            option.value = card;
-            option.textContent = `${card} ${LEGENDARY_CARDS.includes(card) ? '⭐' : ''}`;
-            nameSelect.appendChild(option);
-        });
-        
-        // Populate levels (1-15 for now)
-        levelSelect.innerHTML = '<option value="">Level...</option>';
-        for (let j = 1; j <= 15; j++) {
-            const option = document.createElement('option');
-            option.value = j;
-            option.textContent = `Level ${j}`;
-            levelSelect.appendChild(option);
-        }
-        
-        // Add event listeners
-        nameSelect.addEventListener('change', function() {
-            formData.cards[i].name = this.value;
-            updateCardLevelOptions(i, this.value);
-            updateDisabledCards();
-            calculateAndDisplayStrength();
-        });
-        
-        levelSelect.addEventListener('change', function() {
-            formData.cards[i].level = this.value;
-            calculateAndDisplayStrength();
-        });
-    }
-}
-
-function updateCardLevelOptions(cardIndex, cardName) {
-    const levelSelect = document.getElementById(`card${cardIndex}_level`);
-    const currentValue = levelSelect.value;
-    
-    let options = '<option value="">Level...</option>';
-    for (let i = 1; i <= 15; i++) {
-        options += `<option value="${i}">Level ${i}</option>`;
-    }
-    
-    if (LEGENDARY_CARDS.includes(cardName)) {
-        options += `<option value="16">Reincarnated I (16)</option>`;
-        options += `<option value="17">Reincarnated II (17)</option>`;
-        options += `<option value="18">Reincarnated III (18)</option>`;
-    }
-    
-    levelSelect.innerHTML = options;
-    if (currentValue) {
-        levelSelect.value = currentValue;
-    }
-}
-
-function updateDisabledCards() {
-    const selectedCards = formData.cards.map(c => c.name).filter(Boolean);
-    
-    for (let i = 0; i < 5; i++) {
-        const select = document.getElementById(`card${i}_name`);
-        const currentValue = select.value;
-        
-        Array.from(select.options).forEach(option => {
-            if (option.value && selectedCards.includes(option.value) && option.value !== currentValue) {
-                option.disabled = true;
-            } else {
-                option.disabled = false;
-            }
-        });
-    }
-}
-
-async function loadCommunities() {
-    const communitySelect = document.getElementById('community');
-    
-    try {
-        if (!formData.guild_id) {
-            console.warn('No guild_id set, using default communities');
-            useDefaultCommunities();
-            return;
-        }
-        
-        const communities = [
-            { name: 'Shinning Stars', abbreviation: 'SS', emoji: '🌟' },
-            { name: 'Empires Gaming', abbreviation: 'EMP', emoji: '🦁' },
-            { name: 'Ronin Gaming', abbreviation: 'RBS', emoji: '🥷' }
-        ];
-        
-        populateCommunityDropdown(communities);
-        
-    } catch (error) {
-        console.error('Error loading communities:', error);
-        useDefaultCommunities();
-    }
-}
-
-function useDefaultCommunities() {
-    const communities = [
-        { name: 'Shinning Stars', abbreviation: 'SS', emoji: '🌟' },
-        { name: 'Empires Gaming', abbreviation: 'EMP', emoji: '🦁' },
-        { name: 'Ronin Gaming', abbreviation: 'RBS', emoji: '🥷' }
-    ];
-    populateCommunityDropdown(communities);
-}
-
-function populateCommunityDropdown(communities) {
-    const select = document.getElementById('community');
-    select.innerHTML = '<option value="">Select community...</option>';
-    
-    communities.forEach(comm => {
-        const option = document.createElement('option');
-        option.value = comm.name;
-        option.textContent = `${comm.emoji} ${comm.name}`;
-        select.appendChild(option);
-    });
-    
-    const otherOption = document.createElement('option');
-    otherOption.value = '__OTHER__';
-    otherOption.textContent = '✏️ Other (Type your community)';
-    otherOption.style.fontStyle = 'italic';
-    select.appendChild(otherOption);
-}
-
-function handleCommunityChange() {
-    const select = document.getElementById('community');
-    const container = document.getElementById('community-container');
-    const existingInput = document.getElementById('custom-community-input');
-    const existingHelper = document.getElementById('custom-community-helper');
-    
-    if (existingInput) existingInput.remove();
-    if (existingHelper) existingHelper.remove();
-    
-    if (select.value === '__OTHER__') {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'custom-community-input';
-        input.placeholder = 'Enter your community name';
-        input.className = 'w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none mt-2';
-        input.required = true;
-        input.maxLength = 50;
-        
-        const helper = document.createElement('p');
-        helper.id = 'custom-community-helper';
-        helper.className = 'text-xs text-gray-500 mt-1';
-        helper.textContent = 'Your community will be added to the list automatically';
-        
-        container.appendChild(input);
-        container.appendChild(helper);
-        
-        input.focus();
-        
-        input.addEventListener('input', function() {
-            formData.community = this.value.trim();
-        });
-        
-        formData.community = '';
-    } else {
-        formData.community = select.value;
-    }
-}
-
-async function addCustomCommunity(communityName) {
-    if (!formData.guild_id) {
-        console.log('No guild_id, skipping community API call');
-        return;
-    }
-    
-    console.log('Custom community will be added:', communityName);
-}
-
-function attachEventListeners() {
-    loadCommunities();
-    
-    ['crit_level', 'legendarity', 'perks_level'].forEach(id => {
-        document.getElementById(id).addEventListener('input', function() {
-            formData[id] = this.value;
-            calculateAndDisplayStrength();
-        });
-    });
-    
-    document.getElementById('community').addEventListener('change', function() {
-        handleCommunityChange();
-    });
-    
-    ['username', 'game_username', 'game_id', 'timezone', 'hero', 'hero_level', 'hero_item', 'hero_item_level'].forEach(id => {
-        const element = document.getElementById(id);
-        element.addEventListener('change', function() {
-            formData[id] = this.value;
-            console.log(`Updated ${id}:`, this.value); // Debug log
-        });
-        // Also capture on input for text fields
-        if (element.tagName === 'INPUT') {
-            element.addEventListener('input', function() {
-                formData[id] = this.value;
-            });
-        }
-    });
-    
-    document.getElementById('registration-form').addEventListener('submit', handleFormSubmit);
-}
-
-function calculateAndDisplayStrength() {
-    const baseCrit = parseInt(formData.crit_level) || 0;
-    const legendarity = parseInt(formData.legendarity) || 0;
+    <!-- Load registration.js -->
+    <script src="registration.js"></script>
+</body>
+</html>
