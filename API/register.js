@@ -1,4 +1,4 @@
-// api/register.js - Fetch webhook dynamically from bot database
+// api/register.js - Send registration to Discord webhook
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -18,25 +18,22 @@ export default async function handler(req, res) {
         const data = req.body;
         const { discord_id, username, guild_id } = data;
         
+        console.log('Registration received:', { discord_id, username, guild_id });
+        
         if (!discord_id || !guild_id) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
         
-        // Fetch webhook URL from bot database API
-        // You'll need to create a simple API endpoint on your bot server
-        // OR store webhooks in a shared database (like Vercel's KV store)
-        // OR use environment variables per guild
-        
-        // Option 1: Environment variables (simple for few servers)
+        // Get webhook URL from environment variable
         const webhookUrl = process.env[`WEBHOOK_URL_${guild_id}`];
         
         if (!webhookUrl) {
-            console.error(`No webhook configured for guild ${guild_id}`);
+            console.log(`No webhook configured for guild ${guild_id}`);
             
-            // Return success but tell user to use export code
+            // Still return success - user can use export code
             return res.status(200).json({
                 success: true,
-                message: 'Registration received! Use the export code below to complete registration in Discord.',
+                message: 'Registration received! Use the export code to complete in Discord.',
                 use_export_code: true
             });
         }
@@ -77,10 +74,10 @@ export default async function handler(req, res) {
         };
         
         // Add hero item if present
-        if (data.hero_item) {
+        if (data.hero_item && data.hero_item !== 'None') {
             embed.fields.push({
                 name: "Hero Item",
-                value: `${data.hero_item} (Lv ${data.hero_item_level})`,
+                value: `${data.hero_item} (Lv ${data.hero_item_level || 0})`,
                 inline: true
             });
         }
@@ -111,12 +108,13 @@ export default async function handler(req, res) {
         
         // Add export code
         embed.fields.push({
-            name: "📤 Export Code (Backup)",
+            name: "📤 Export Code",
             value: `\`\`\`${data.export_code}\`\`\``,
             inline: false
         });
         
         // Send to Discord webhook
+        console.log('Sending to Discord webhook...');
         const webhookResponse = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -124,9 +122,7 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 content: `🌐 **New Browser Registration** - <@${discord_id}>`,
-                embeds: [embed],
-                // Optional: Add buttons for staff to approve/deny
-                // components: [...] // Requires interaction endpoint
+                embeds: [embed]
             })
         });
         
@@ -136,6 +132,8 @@ export default async function handler(req, res) {
             throw new Error('Failed to send to Discord');
         }
         
+        console.log('✅ Sent to Discord successfully');
+        
         return res.status(200).json({
             success: true,
             message: 'Registration submitted successfully! Check Discord for approval.'
@@ -144,6 +142,7 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).json({ 
+            success: false,
             error: 'Internal server error',
             message: error.message 
         });
