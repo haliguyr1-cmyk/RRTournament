@@ -1,23 +1,9 @@
-// api/register.js - Vercel Serverless Function for Registration Submission
-import admin from 'firebase-admin';
-
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        }),
-        databaseURL: process.env.FIREBASE_DATABASE_URL
-    });
-}
-
-const db = admin.database();
+// api/register.js - Fetch webhook dynamically from bot database
 
 export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
     if (req.method === 'OPTIONS') {
@@ -29,84 +15,130 @@ export default async function handler(req, res) {
     }
     
     try {
-        const registrationData = req.body;
-        const { guild_id, discord_id } = registrationData;
+        const data = req.body;
+        const { discord_id, username, guild_id } = data;
         
-        // Validate required fields
-        if (!guild_id || !discord_id) {
-            return res.status(400).json({ 
-                error: 'Missing required fields: guild_id and discord_id' 
+        if (!discord_id || !guild_id) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Fetch webhook URL from bot database API
+        // You'll need to create a simple API endpoint on your bot server
+        // OR store webhooks in a shared database (like Vercel's KV store)
+        // OR use environment variables per guild
+        
+        // Option 1: Environment variables (simple for few servers)
+        const webhookUrl = process.env[`WEBHOOK_URL_${guild_id}`];
+        
+        if (!webhookUrl) {
+            console.error(`No webhook configured for guild ${guild_id}`);
+            
+            // Return success but tell user to use export code
+            return res.status(200).json({
+                success: true,
+                message: 'Registration received! Use the export code below to complete registration in Discord.',
+                use_export_code: true
             });
         }
         
-        // Check if user already has a pending or approved registration
-        const existingRef = db.ref(`registrations/${guild_id}/${discord_id}`);
-        const existingSnapshot = await existingRef.once('value');
+        // Build deck text
+        const deckText = data.cards.map((c, i) => 
+            `${i+1}. ${c.name} - Lv ${c.level}`
+        ).join('\n');
         
-        if (existingSnapshot.exists()) {
-            const existing = existingSnapshot.val();
-            if (existing.status === 'approved') {
-                return res.status(409).json({ 
-                    error: 'You are already registered and approved!' 
-                });
-            }
+        // Build pantheon text
+        let pantheonText = '';
+        if (data.strength.pantheonCards && data.strength.pantheonCards.length > 0) {
+            const bonuses = data.strength.pantheonCards.map(c => 
+                `${c.name}: +${Math.floor(c.bonus * 100)}%`
+            ).join(', ');
+            pantheonText = `\n**Pantheon Bonuses:** ${bonuses}`;
         }
         
-        // Save registration to Firebase
-        const registrationRef = db.ref(`registrations/${guild_id}/${discord_id}`);
-        await registrationRef.set({
-            ...registrationData,
-            timestamp: Date.now(),
-            status: 'pending',
-            source: 'browser'
-        });
-        
-        // Add to pending queue for Discord bot to process
-        const queueRef = db.ref(`pending_registrations/${guild_id}`);
-        await queueRef.push({
-            discord_id,
-            timestamp: Date.now(),
-            source: 'browser'
-        });
-        
-        // Send webhook notification to Discord (if configured)
-        if (process.env.DISCORD_WEBHOOK_URL) {
-            try {
-                await fetch(process.env.DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `🌐 New browser registration from **${registrationData.game_username}**!`,
-                        embeds: [{
-                            title: 'Web Registration Received',
-                            color: 0x00ff00,
-                            fields: [
-                                { name: 'Discord User', value: `<@${discord_id}>`, inline: true },
-                                { name: 'Game Username', value: registrationData.game_username, inline: true },
-                                { name: 'Community', value: registrationData.community, inline: true },
-                                { name: 'Division', value: registrationData.strength.division, inline: true },
-                                { name: 'Total Strength', value: registrationData.strength.totalStrength.toString(), inline: true },
-                                { name: 'Hero', value: `${registrationData.hero} (Lv ${registrationData.hero_level})`, inline: true }
-                            ],
-                            timestamp: new Date().toISOString()
-                        }]
-                    })
-                });
-            } catch (webhookError) {
-                console.error('Webhook error:', webhookError);
-                // Don't fail registration if webhook fails
+        // Create embed for Discord
+        const embed = {
+            title: "🌐 New Browser Registration",
+            description: `Registration from <@${discord_id}>`,
+            color: 0x00ff00,
+            fields: [
+                { name: "Discord User", value: `<@${discord_id}>`, inline: true },
+                { name: "Username", value: username || 'N/A', inline: true },
+                { name: "Game Username", value: data.game_username, inline: true },
+                { name: "Game ID", value: data.game_id, inline: true },
+                { name: "Community", value: data.community, inline: true },
+                { name: "Timezone", value: data.timezone, inline: true },
+                { name: "Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true },
+                { name: "Perks Level", value: data.perks_level.toString(), inline: true }
+            ],
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: `User ID: ${discord_id} | Source: Browser`
             }
+        };
+        
+        // Add hero item if present
+        if (data.hero_item) {
+            embed.fields.push({
+                name: "Hero Item",
+                value: `${data.hero_item} (Lv ${data.hero_item_level})`,
+                inline: true
+            });
         }
         
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Registration submitted successfully',
-            data: {
-                discord_id,
-                guild_id,
-                division: registrationData.strength.division,
-                total_strength: registrationData.strength.totalStrength
-            }
+        // Add deck
+        embed.fields.push({
+            name: "🃏 Deck (5 Cards)",
+            value: deckText,
+            inline: false
+        });
+        
+        // Add strength calculation
+        const strength = data.strength;
+        const strengthText = [
+            `**Base Crit:** ${strength.baseCrit}%`,
+            `**Adjusted Crit:** ${strength.adjustedCrit}%${pantheonText}`,
+            `**Legendarity:** ${strength.legendarity}`,
+            `**Perks:** ${strength.perks}`,
+            `**Total Strength:** ${strength.totalStrength}`,
+            `**Division:** ${strength.division}`
+        ].join('\n');
+        
+        embed.fields.push({
+            name: "📊 Calculated Strength",
+            value: strengthText,
+            inline: false
+        });
+        
+        // Add export code
+        embed.fields.push({
+            name: "📤 Export Code (Backup)",
+            value: `\`\`\`${data.export_code}\`\`\``,
+            inline: false
+        });
+        
+        // Send to Discord webhook
+        const webhookResponse = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: `🌐 **New Browser Registration** - <@${discord_id}>`,
+                embeds: [embed],
+                // Optional: Add buttons for staff to approve/deny
+                // components: [...] // Requires interaction endpoint
+            })
+        });
+        
+        if (!webhookResponse.ok) {
+            const errorText = await webhookResponse.text();
+            console.error('Webhook error:', errorText);
+            throw new Error('Failed to send to Discord');
+        }
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Registration submitted successfully! Check Discord for approval.'
         });
         
     } catch (error) {
