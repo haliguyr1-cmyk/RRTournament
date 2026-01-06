@@ -467,6 +467,9 @@ function displayStrength() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    console.log('🔍 Form submitted!');
+    console.log('Form data:', formData);
+    
     if (!formData.guild_id) {
         showAlert('Please use the registration link from Discord to ensure your server is identified.', 'error');
         return;
@@ -496,8 +499,12 @@ async function handleFormSubmit(e) {
     
     if (!calculatedStrength || !calculatedStrength.division) {
         showAlert('Invalid stats! Please check your values.', 'error');
+        console.log('❌ Missing calculated strength:', calculatedStrength);
         return;
     }
+    
+    console.log('✅ All validations passed!');
+    console.log('Calculated strength:', calculatedStrength);
     
     // Generate export code
     const parts = [
@@ -546,22 +553,29 @@ async function handleFormSubmit(e) {
         submitButton.disabled = true;
         submitButton.textContent = 'Submitting... ⏳';
         
+        console.log('📤 Sending to API...');
+        console.log('Submission data:', submissionData);
+        
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(submissionData)
         });
         
+        console.log('📥 Response received:', response.status);
+        
         const result = await response.json();
+        console.log('Result:', result);
         
         if (!response.ok) {
             throw new Error(result.error || 'Submission failed');
         }
         
+        console.log('✅ Registration successful!');
         showSuccessModal(exportString);
         
     } catch (error) {
-        console.error('Submission error:', error);
+        console.error('❌ Submission error:', error);
         showAlert(`Error: ${error.message}`, 'error');
         
         const submitButton = document.querySelector('button[type="submit"]');
