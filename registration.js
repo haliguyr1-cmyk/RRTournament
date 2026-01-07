@@ -698,3 +698,140 @@ function showAlert(message, type) {
         alertDiv.remove();
     }, 5000);
 }
+
+// Import/Export Modal Functions
+function showImportModal() {
+    document.getElementById('import-modal').classList.remove('hidden');
+}
+
+function hideImportModal() {
+    document.getElementById('import-modal').classList.add('hidden');
+    document.getElementById('import-code-input').value = '';
+}
+
+function importCode() {
+    const code = document.getElementById('import-code-input').value.trim();
+    
+    if (!code) {
+        showAlert('Please paste an export code first!', 'error');
+        return;
+    }
+    
+    try {
+        // Parse the export code
+        // FORMAT: GameName,GameID,Crit%,Legendarity,Perks,Timezone,Community,Hero,HeroLvl,HeroItem,HeroItemLvl,Card1,Card1Lvl,...
+        const parts = code.split(',').map(p => p.trim());
+        
+        if (parts.length < 21) {
+            showAlert('Invalid export code format! Make sure you copied the entire code.', 'error');
+            return;
+        }
+        
+        // Fill basic info
+        document.getElementById('game_username').value = parts[0];
+        formData.game_username = parts[0];
+        
+        document.getElementById('game_id').value = parts[1];
+        formData.game_id = parts[1];
+        
+        document.getElementById('crit_level').value = parts[2];
+        formData.crit_level = parts[2];
+        
+        document.getElementById('legendarity').value = parts[3];
+        formData.legendarity = parts[3];
+        
+        document.getElementById('perks_level').value = parts[4];
+        formData.perks_level = parts[4];
+        
+        document.getElementById('timezone').value = parts[5];
+        formData.timezone = parts[5];
+        
+        // Handle community - check if it exists in dropdown or use custom
+        const communitySelect = document.getElementById('community');
+        const communityValue = parts[6];
+        let communityFound = false;
+        
+        for (let option of communitySelect.options) {
+            if (option.value === communityValue) {
+                communitySelect.value = communityValue;
+                formData.community = communityValue;
+                communityFound = true;
+                break;
+            }
+        }
+        
+        if (!communityFound) {
+            // Select "Other" and fill custom input
+            communitySelect.value = '__OTHER__';
+            handleCommunityChange();
+            setTimeout(() => {
+                const customInput = document.getElementById('custom-community-input');
+                if (customInput) {
+                    customInput.value = communityValue;
+                    formData.community = communityValue;
+                }
+            }, 100);
+        }
+        
+        // Hero
+        document.getElementById('hero').value = parts[7];
+        formData.hero = parts[7];
+        handleHeroChange();
+        
+        document.getElementById('hero_level').value = parts[8];
+        formData.hero_level = parts[8];
+        
+        // Hero item
+        const heroItem = parts[9];
+        if (heroItem && heroItem !== 'None') {
+            document.getElementById('hero_item').value = heroItem;
+            formData.hero_item = heroItem;
+            
+            const heroItemLevel = parts[10];
+            if (heroItemLevel && heroItemLevel !== '0') {
+                document.getElementById('hero_item_level').value = heroItemLevel;
+                formData.hero_item_level = heroItemLevel;
+            }
+        }
+        
+        // Cards (5 cards x 2 fields = 10 fields starting at index 11)
+        for (let i = 0; i < 5; i++) {
+            const cardNameIdx = 11 + (i * 2);
+            const cardLevelIdx = 12 + (i * 2);
+            
+            if (cardNameIdx < parts.length && parts[cardNameIdx]) {
+                const cardName = parts[cardNameIdx];
+                const cardLevel = parts[cardLevelIdx];
+                
+                // Set card name
+                document.getElementById(`card${i}_name`).value = cardName;
+                formData.cards[i].name = cardName;
+                
+                // Update level options for this card
+                updateCardLevelOptions(i, cardName);
+                
+                // Set card level
+                document.getElementById(`card${i}_level`).value = cardLevel;
+                formData.cards[i].level = cardLevel;
+            }
+        }
+        
+        // Update disabled cards
+        updateDisabledCards();
+        
+        // Calculate strength
+        calculateAndDisplayStrength();
+        
+        // Hide modal
+        hideImportModal();
+        
+        // Scroll to form
+        window.scrollTo({ top: 200, behavior: 'smooth' });
+        
+        showAlert('✅ Export code imported successfully! Review and submit.', 'success');
+        
+    } catch (error) {
+        console.error('Import error:', error);
+        showAlert('Error importing code: ' + error.message, 'error');
+    }
+}
