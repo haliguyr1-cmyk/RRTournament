@@ -62,30 +62,21 @@ export default async function handler(req, res) {
             `Total Strength: ${strength.totalStrength} ` +
             `Division: ${strength.division}`;
         
-        // Create embed for Discord - WITH EMOJIS
-        const embed = {
-            title: "🌐 Browser Registration - PENDING APPROVAL",
-            description: `Registration from <@${discord_id}>`,
-            color: 0xFFA500, // Orange for pending
-            fields: [
-                { name: "👤 Discord User", value: `<@${discord_id}>`, inline: true },
-                { name: "📝 Username", value: username || 'N/A', inline: true },
-                { name: "🎮 Game Username", value: data.game_username, inline: true },
-                { name: "🆔 Game ID", value: data.game_id, inline: true },
-                { name: "🏛️ Community", value: data.community, inline: true },
-                { name: "🕐 Timezone", value: data.timezone, inline: true },
-                { name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true },
-                { name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true }
-            ],
-            timestamp: new Date().toISOString(),
-            footer: {
-                text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
-            }
-        };
+        // Build fields array step by step
+        const fields = [];
+        
+        fields.push({ name: "👤 Discord User", value: `<@${discord_id}>`, inline: true });
+        fields.push({ name: "📝 Username", value: username || 'N/A', inline: true });
+        fields.push({ name: "🎮 Game Username", value: data.game_username, inline: true });
+        fields.push({ name: "🆔 Game ID", value: data.game_id, inline: true });
+        fields.push({ name: "🏛️ Community", value: data.community, inline: true });
+        fields.push({ name: "🕐 Timezone", value: data.timezone, inline: true });
+        fields.push({ name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true });
+        fields.push({ name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true });
         
         // Add hero item if present
         if (data.hero_item && data.hero_item !== 'None') {
-            embed.fields.push({
+            fields.push({
                 name: "⭐ Hero Item",
                 value: `${data.hero_item} (Lv ${data.hero_item_level || 0})`,
                 inline: true
@@ -93,25 +84,42 @@ export default async function handler(req, res) {
         }
         
         // Add deck
-        embed.fields.push({
+        fields.push({
             name: "🃏 Deck (5 Cards)",
             value: deckText,
             inline: false
         });
         
         // Add calculated strength
-        embed.fields.push({
+        fields.push({
             name: "📊 Calculated Strength",
             value: strengthText,
             inline: false
         });
         
         // Add export code
-        embed.fields.push({
+        fields.push({
             name: "📋 Export Code",
             value: `\`\`\`${data.export_code}\`\`\``,
             inline: false
         });
+        
+        console.log('Total fields:', fields.length);
+        console.log('Deck text length:', deckText.length);
+        console.log('Strength text length:', strengthText.length);
+        console.log('Export code length:', data.export_code.length);
+        
+        // Create embed for Discord
+        const embed = {
+            title: "🌐 Browser Registration - PENDING APPROVAL",
+            description: "Please review the participant information below:",
+            color: 0xFFA500,
+            fields: fields,
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
+            }
+        };
         
         // Create approval buttons
         const components = [
@@ -140,8 +148,9 @@ export default async function handler(req, res) {
             }
         ];
         
+        console.log('Sending embed with', fields.length, 'fields');
+        
         // Send to Discord webhook
-        console.log('Sending to Discord webhook...');
         const webhookResponse = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -157,6 +166,7 @@ export default async function handler(req, res) {
         if (!webhookResponse.ok) {
             const errorText = await webhookResponse.text();
             console.error('Webhook error:', errorText);
+            console.error('Response status:', webhookResponse.status);
             throw new Error('Failed to send to Discord');
         }
         
@@ -169,6 +179,7 @@ export default async function handler(req, res) {
         
     } catch (error) {
         console.error('Registration error:', error);
+        console.error('Error stack:', error.stack);
         return res.status(500).json({ 
             success: false,
             error: 'Internal server error',
