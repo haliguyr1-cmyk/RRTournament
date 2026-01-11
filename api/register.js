@@ -38,59 +38,67 @@ export default async function handler(req, res) {
             });
         }
         
-        // Build deck text
-        const deckText = data.cards.map((c, i) => 
-            `${i+1}. ${c.name} - Lv ${c.level}`
-        ).join('\n');
-        
-        // Build pantheon text
-        let pantheonText = '';
-        if (data.strength.pantheonCards && data.strength.pantheonCards.length > 0) {
-            const bonuses = data.strength.pantheonCards.map(c => 
-                `${c.name}: +${Math.floor(c.bonus * 100)}%`
-            ).join(', ');
-            pantheonText = `\n**Pantheon Bonuses:** ${bonuses}`;
-        }
-        
         // Create embed for Discord
         const embed = {
             title: "🌐 New Browser Registration - PENDING APPROVAL",
             description: `Registration from <@${discord_id}>`,
             color: 0xFFA500, // Orange for pending
-            fields: [
-                { name: "Discord User", value: `<@${discord_id}>`, inline: true },
-                { name: "Username", value: username || 'N/A', inline: true },
-                { name: "Game Username", value: data.game_username, inline: true },
-                { name: "Game ID", value: data.game_id, inline: true },
-                { name: "Community", value: data.community, inline: true },
-                { name: "Timezone", value: data.timezone, inline: true },
-                { name: "Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true },
-                { name: "Perks Level", value: data.perks_level.toString(), inline: true }
-            ],
+            fields: [],
             timestamp: new Date().toISOString(),
             footer: {
                 text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
             }
         };
-        
+
+        // Add basic fields
+        embed.fields.push(
+            { name: "👤 Discord User", value: `<@${discord_id}>`, inline: true },
+            { name: "🎮 Game Username", value: data.game_username, inline: true },
+            { name: "🆔 Game ID", value: data.game_id, inline: true },
+            { name: "🏛️ Community", value: data.community, inline: true },
+            { name: "🕐 Timezone", value: data.timezone, inline: true },
+            { name: "\u200b", value: "\u200b", inline: true } // Spacer
+        );
+
+        // Add hero info
+        embed.fields.push(
+            { name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true }
+        );
+
         // Add hero item if present
         if (data.hero_item && data.hero_item !== 'None') {
             embed.fields.push({
-                name: "Hero Item",
+                name: "⭐ Hero Item",
                 value: `${data.hero_item} (Lv ${data.hero_item_level || 0})`,
                 inline: true
             });
         }
-        
-        // Add deck
+
+        embed.fields.push(
+            { name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true }
+        );
+
+        // Build deck text
+        const deckText = data.cards.map((c, i) => 
+            `${i+1}. ${c.name} - Lv ${c.level}`
+        ).join('\n');
+
         embed.fields.push({
             name: "🃏 Deck (5 Cards)",
             value: deckText,
             inline: false
         });
-        
-        // Add strength calculation
+
+        // Build strength calculation
         const strength = data.strength;
+        let pantheonText = '';
+        if (strength.pantheonCards && strength.pantheonCards.length > 0) {
+            const bonuses = strength.pantheonCards.map(c => 
+                `${c.name}: +${Math.floor(c.bonus * 100)}%`
+            ).join(', ');
+            pantheonText = `\n**Pantheon Bonuses:** ${bonuses}`;
+        }
+
         const strengthText = [
             `**Base Crit:** ${strength.baseCrit}%`,
             `**Adjusted Crit:** ${strength.adjustedCrit}%${pantheonText}`,
@@ -99,16 +107,16 @@ export default async function handler(req, res) {
             `**Total Strength:** ${strength.totalStrength}`,
             `**Division:** ${strength.division}`
         ].join('\n');
-        
+
         embed.fields.push({
             name: "📊 Calculated Strength",
             value: strengthText,
             inline: false
         });
-        
+
         // Add export code
         embed.fields.push({
-            name: "📤 Export Code",
+            name: "📋 Export Code",
             value: `\`\`\`${data.export_code}\`\`\``,
             inline: false
         });
