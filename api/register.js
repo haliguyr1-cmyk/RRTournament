@@ -38,33 +38,51 @@ export default async function handler(req, res) {
             });
         }
         
-        // Create embed for Discord
+        // Build deck text
+        const deckText = data.cards.map((c, i) => 
+            `${i+1}. ${c.name} - Lv ${c.level}`
+        ).join('\n');
+        
+        // Build pantheon text
+        let pantheonText = '';
+        if (data.strength.pantheonCards && data.strength.pantheonCards.length > 0) {
+            const bonuses = data.strength.pantheonCards.map(c => 
+                `${c.name}: +${Math.floor(c.bonus * 100)}%`
+            ).join(', ');
+            pantheonText = ` Pantheon Bonuses: ${bonuses}`;
+        }
+        
+        // Build strength text
+        const strength = data.strength;
+        const strengthText = 
+            `Base Crit: ${strength.baseCrit}% ` +
+            `Adjusted Crit: ${strength.adjustedCrit}%${pantheonText} ` +
+            `Legendarity: ${strength.legendarity} ` +
+            `Perks: ${strength.perks} ` +
+            `Total Strength: ${strength.totalStrength} ` +
+            `Division: ${strength.division}`;
+        
+        // Create embed for Discord - WITH EMOJIS
         const embed = {
-            title: "🌐 New Browser Registration - PENDING APPROVAL",
+            title: "🌐 Browser Registration - PENDING APPROVAL",
             description: `Registration from <@${discord_id}>`,
             color: 0xFFA500, // Orange for pending
-            fields: [],
+            fields: [
+                { name: "👤 Discord User", value: `<@${discord_id}>`, inline: true },
+                { name: "📝 Username", value: username || 'N/A', inline: true },
+                { name: "🎮 Game Username", value: data.game_username, inline: true },
+                { name: "🆔 Game ID", value: data.game_id, inline: true },
+                { name: "🏛️ Community", value: data.community, inline: true },
+                { name: "🕐 Timezone", value: data.timezone, inline: true },
+                { name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true },
+                { name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true }
+            ],
             timestamp: new Date().toISOString(),
             footer: {
                 text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
             }
         };
-
-        // Add basic fields
-        embed.fields.push(
-            { name: "👤 Discord User", value: `<@${discord_id}>`, inline: true },
-            { name: "🎮 Game Username", value: data.game_username, inline: true },
-            { name: "🆔 Game ID", value: data.game_id, inline: true },
-            { name: "🏛️ Community", value: data.community, inline: true },
-            { name: "🕐 Timezone", value: data.timezone, inline: true },
-            { name: "\u200b", value: "\u200b", inline: true } // Spacer
-        );
-
-        // Add hero info
-        embed.fields.push(
-            { name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true }
-        );
-
+        
         // Add hero item if present
         if (data.hero_item && data.hero_item !== 'None') {
             embed.fields.push({
@@ -73,47 +91,21 @@ export default async function handler(req, res) {
                 inline: true
             });
         }
-
-        embed.fields.push(
-            { name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true }
-        );
-
-        // Build deck text
-        const deckText = data.cards.map((c, i) => 
-            `${i+1}. ${c.name} - Lv ${c.level}`
-        ).join('\n');
-
+        
+        // Add deck
         embed.fields.push({
             name: "🃏 Deck (5 Cards)",
             value: deckText,
             inline: false
         });
-
-        // Build strength calculation
-        const strength = data.strength;
-        let pantheonText = '';
-        if (strength.pantheonCards && strength.pantheonCards.length > 0) {
-            const bonuses = strength.pantheonCards.map(c => 
-                `${c.name}: +${Math.floor(c.bonus * 100)}%`
-            ).join(', ');
-            pantheonText = `\n**Pantheon Bonuses:** ${bonuses}`;
-        }
-
-        const strengthText = [
-            `**Base Crit:** ${strength.baseCrit}%`,
-            `**Adjusted Crit:** ${strength.adjustedCrit}%${pantheonText}`,
-            `**Legendarity:** ${strength.legendarity}`,
-            `**Perks:** ${strength.perks}`,
-            `**Total Strength:** ${strength.totalStrength}`,
-            `**Division:** ${strength.division}`
-        ].join('\n');
-
+        
+        // Add calculated strength
         embed.fields.push({
             name: "📊 Calculated Strength",
             value: strengthText,
             inline: false
         });
-
+        
         // Add export code
         embed.fields.push({
             name: "📋 Export Code",
@@ -121,28 +113,28 @@ export default async function handler(req, res) {
             inline: false
         });
         
-        // Create approval buttons - MUST match Python bot's custom_ids
+        // Create approval buttons
         const components = [
             {
-                type: 1, // Action Row
+                type: 1,
                 components: [
                     {
-                        type: 2, // Button
-                        style: 3, // Green/Success
+                        type: 2,
+                        style: 3,
                         label: "✅ Approve Registration",
-                        custom_id: "approve_browser_reg"  // Matches Python handler
+                        custom_id: "approve_browser_reg"
                     },
                     {
-                        type: 2, // Button
-                        style: 4, // Red/Danger
+                        type: 2,
+                        style: 4,
                         label: "❌ Reject Registration",
-                        custom_id: "reject_browser_reg"  // Matches Python handler
+                        custom_id: "reject_browser_reg"
                     },
                     {
-                        type: 2, // Button
-                        style: 1, // Blue/Primary
+                        type: 2,
+                        style: 1,
                         label: "📋 Copy Export Code",
-                        custom_id: "copy_export_code"  // Matches Python handler
+                        custom_id: "copy_export_code"
                     }
                 ]
             }
