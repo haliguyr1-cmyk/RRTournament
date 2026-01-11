@@ -109,7 +109,7 @@ export default async function handler(req, res) {
             }
         };
         
-        // Step 1: Find the registration category
+        // Step 1: Find the REGISTRATIONS category (exact match preferred)
         console.log('Fetching guild channels...');
         const channelsResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/channels`, {
             headers: {
@@ -124,12 +124,19 @@ export default async function handler(req, res) {
         const channels = await channelsResponse.json();
         console.log(`Found ${channels.length} channels`);
         
-        // Find registration/pending category
-        const registrationCategory = channels.find(ch => 
-            ch.type === 4 && // Category type
-            (ch.name.toLowerCase().includes('registration') || 
-             ch.name.toLowerCase().includes('pending'))
+        // Find REGISTRATIONS category - prioritize exact match
+        let registrationCategory = channels.find(ch => 
+            ch.type === 4 && ch.name === "REGISTRATIONS"
         );
+        
+        // Fallback to case-insensitive match
+        if (!registrationCategory) {
+            registrationCategory = channels.find(ch => 
+                ch.type === 4 && 
+                (ch.name.toLowerCase().includes('registration') || 
+                 ch.name.toLowerCase().includes('pending'))
+            );
+        }
         
         if (!registrationCategory) {
             console.log('No registration category found');
@@ -220,14 +227,33 @@ export default async function handler(req, res) {
                     {
                         type: 2,
                         style: 3,
-                        label: "✅ Approve Registration",
+                        label: "Approve",
                         custom_id: "approve_browser_reg"
                     },
                     {
                         type: 2,
                         style: 4,
-                        label: "❌ Reject Registration",
+                        label: "Deny",
                         custom_id: "reject_browser_reg"
+                    }
+                ]
+            },
+            {
+                type: 1,
+                components: [
+                    {
+                        type: 3, // Select menu
+                        custom_id: "division_override_browser",
+                        placeholder: "Override Division (optional)",
+                        options: [
+                            { label: "Keep Current Division", value: "none", default: true },
+                            { label: "Lightweight", value: "Lightweight" },
+                            { label: "Cruiserweight", value: "Cruiserweight" },
+                            { label: "Middleweight", value: "Middleweight" },
+                            { label: "Heavyweight", value: "Heavyweight" },
+                            { label: "Super Heavyweight", value: "Super Heavyweight" },
+                            { label: "Champion", value: "Champion" }
+                        ]
                     }
                 ]
             }
@@ -240,7 +266,7 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                content: `<@${discord_id}> 🌐 **New Browser Registration** - ⏳ **PENDING APPROVAL**`,
+                content: `<@${discord_id}>`,
                 embeds: [embed],
                 components: components
             })
@@ -252,6 +278,28 @@ export default async function handler(req, res) {
         } else {
             console.log('✅ Posted registration to ticket channel');
         }
+        
+        // Add "Export My Settings" button
+        await fetch(`https://discord.com/api/v10/channels/${ticketChannel.id}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: "📤 **Your Registration Settings:**",
+                components: [{
+                    type: 1,
+                    components: [{
+                        type: 2,
+                        style: 1,
+                        label: "Export My Settings",
+                        custom_id: "export_settings_persistent",
+                        emoji: { name: "📤" }
+                    }]
+                }]
+            })
+        });
         
         // Step 5: Ping moderators/admins
         let pingMessage = '🔔 New browser registration to review!';
