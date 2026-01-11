@@ -1,4 +1,4 @@
-// api/register.js - Send registration to Discord webhook with approval buttons
+// api/register.js - Create ticket channel directly and post registration there
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -24,28 +24,14 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
         
-        // Get webhook URL from environment variable
-        const webhookUrl = process.env[`WEBHOOK_URL_${guild_id}`];
+        // Get bot token from environment variable
+        const botToken = process.env.DISCORD_BOT_TOKEN;
         
-        if (!webhookUrl) {
-            console.log(`No webhook configured for guild ${guild_id}`);
-            console.log('Available env vars:', Object.keys(process.env).filter(k => k.startsWith('WEBHOOK_URL_')));
-            
-            // Still return success - user can use export code
+        if (!botToken) {
+            console.log('No bot token configured');
             return res.status(200).json({
                 success: true,
                 message: 'Registration received! Use the export code to complete in Discord.',
-                use_export_code: true
-            });
-        }
-        
-        // Validate webhook URL format
-        if (!webhookUrl.startsWith('https://discord.com/api/webhooks/') && 
-            !webhookUrl.startsWith('https://discordapp.com/api/webhooks/')) {
-            console.error('Invalid webhook URL format:', webhookUrl.substring(0, 30) + '...');
-            return res.status(200).json({
-                success: true,
-                message: 'Registration received! Webhook configuration error - please use export code.',
                 use_export_code: true
             });
         }
@@ -109,17 +95,7 @@ export default async function handler(req, res) {
             inline: false
         });
         
-        // Add export code to embed (bot will extract and DM to user)
-        fields.push({
-            name: "📋 Export Code",
-            value: `\`\`\`${data.export_code}\`\`\``,
-            inline: false
-        });
-        
         console.log('Total fields:', fields.length);
-        console.log('Deck text length:', deckText.length);
-        console.log('Strength text length:', strengthText.length);
-        console.log('Export code length:', data.export_code.length);
         
         // Create embed for Discord
         const embed = {
@@ -133,7 +109,110 @@ export default async function handler(req, res) {
             }
         };
         
-        // Create approval buttons
+        // Step 1: Find the registration category
+        console.log('Fetching guild channels...');
+        const channelsResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/channels`, {
+            headers: {
+                'Authorization': `Bot ${botToken}`
+            }
+        });
+        
+        if (!channelsResponse.ok) {
+            throw new Error('Failed to fetch guild channels');
+        }
+        
+        const channels = await channelsResponse.json();
+        console.log(`Found ${channels.length} channels`);
+        
+        // Find registration/pending category
+        const registrationCategory = channels.find(ch => 
+            ch.type === 4 && // Category type
+            (ch.name.toLowerCase().includes('registration') || 
+             ch.name.toLowerCase().includes('pending'))
+        );
+        
+        if (!registrationCategory) {
+            console.log('No registration category found');
+            return res.status(200).json({
+                success: false,
+                message: 'Registration category not found. Please contact an administrator.',
+                use_export_code: true
+            });
+        }
+        
+        console.log(`Found registration category: ${registrationCategory.name}`);
+        
+        // Step 2: Get roles for permissions
+        const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/roles`, {
+            headers: {
+                'Authorization': `Bot ${botToken}`
+            }
+        });
+        
+        const roles = rolesResponse.ok ? await rolesResponse.json() : [];
+        const modRole = roles.find(r => r.name === "Moderator");
+        const adminRole = roles.find(r => r.name === "Administrator");
+        
+        // Step 3: Create ticket channel
+        const channelName = `web-${data.game_username}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        
+        const permissionOverwrites = [
+            {
+                id: guild_id, // @everyone role
+                type: 0,
+                deny: "1024" // VIEW_CHANNEL
+            },
+            {
+                id: discord_id, // The user
+                type: 1,
+                allow: "3072" // VIEW_CHANNEL + SEND_MESSAGES
+            }
+        ];
+        
+        // Add mod role if exists
+        if (modRole) {
+            permissionOverwrites.push({
+                id: modRole.id,
+                type: 0,
+                allow: "3072"
+            });
+        }
+        
+        // Add admin role if exists
+        if (adminRole) {
+            permissionOverwrites.push({
+                id: adminRole.id,
+                type: 0,
+                allow: "3072"
+            });
+        }
+        
+        console.log(`Creating ticket channel: ${channelName}`);
+        
+        const createChannelResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/channels`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: channelName,
+                type: 0, // Text channel
+                parent_id: registrationCategory.id,
+                permission_overwrites: permissionOverwrites
+            })
+        });
+        
+        if (!createChannelResponse.ok) {
+            const error = await createChannelResponse.text();
+            console.error('Failed to create channel:', error);
+            throw new Error('Failed to create ticket channel');
+        }
+        
+        const ticketChannel = await createChannelResponse.json();
+        console.log(`✅ Created ticket channel: ${ticketChannel.name} (${ticketChannel.id})`);
+        
+        // Step 4: Post registration to ticket channel with buttons
         const components = [
             {
                 type: 1,
@@ -149,76 +228,107 @@ export default async function handler(req, res) {
                         style: 4,
                         label: "❌ Reject Registration",
                         custom_id: "reject_browser_reg"
-                    },
-                    {
-                        type: 2,
-                        style: 1,
-                        label: "📋 Copy Export Code",
-                        custom_id: "copy_export_code"
                     }
                 ]
             }
         ];
         
-        console.log('Sending embed with', fields.length, 'fields');
-        console.log('Webhook URL (first 50 chars):', webhookUrl.substring(0, 50) + '...');
-        
-        // Send main registration to Discord webhook
-        const webhookResponse = await fetch(webhookUrl, {
+        const postMessageResponse = await fetch(`https://discord.com/api/v10/channels/${ticketChannel.id}/messages`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                content: `🌐 **New Browser Registration** - <@${discord_id}> - ⏳ **PENDING APPROVAL**`,
+                content: `<@${discord_id}> 🌐 **New Browser Registration** - ⏳ **PENDING APPROVAL**`,
                 embeds: [embed],
                 components: components
             })
         });
         
-        if (!webhookResponse.ok) {
-            const errorText = await webhookResponse.text();
-            console.error('Webhook error:', errorText);
-            console.error('Response status:', webhookResponse.status);
-            
-            let errorDetail = 'Unknown error';
-            try {
-                const errorJson = JSON.parse(errorText);
-                if (errorJson.code === 10015) {
-                    errorDetail = 'Webhook not found or deleted. Please recreate the webhook in Discord.';
-                } else if (errorJson.code === 50027) {
-                    errorDetail = 'Invalid webhook token. Please recreate the webhook in Discord.';
-                } else {
-                    errorDetail = errorJson.message || errorText;
-                }
-            } catch (e) {
-                errorDetail = errorText;
-            }
-            
-            console.error('Error detail:', errorDetail);
-            
-            return res.status(200).json({
-                success: true,
-                message: 'Registration received! Discord webhook error - please use the export code to complete registration.',
-                use_export_code: true,
-                webhook_error: errorDetail
-            });
+        if (!postMessageResponse.ok) {
+            const error = await postMessageResponse.text();
+            console.error('Failed to post message:', error);
+        } else {
+            console.log('✅ Posted registration to ticket channel');
         }
         
-        console.log('✅ Sent main registration to Discord successfully');
+        // Step 5: Ping moderators/admins
+        let pingMessage = '🔔 New browser registration to review!';
+        if (modRole) pingMessage += ` <@&${modRole.id}>`;
+        if (adminRole) pingMessage += ` <@&${adminRole.id}>`;
+        
+        await fetch(`https://discord.com/api/v10/channels/${ticketChannel.id}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: pingMessage
+            })
+        });
+        
+        // Step 6: DM the user with export code
+        try {
+            const dmChannelResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bot ${botToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    recipient_id: discord_id
+                })
+            });
+            
+            if (dmChannelResponse.ok) {
+                const dmChannel = await dmChannelResponse.json();
+                
+                await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bot ${botToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: "✅ Registration Submitted!",
+                            description: "Your registration has been submitted and is pending approval.",
+                            color: 0x5865F2,
+                            fields: [
+                                {
+                                    name: "📋 Your Export Code",
+                                    value: `Keep this safe in case you need it:\n\`\`\`${data.export_code}\`\`\``,
+                                    inline: false
+                                }
+                            ],
+                            footer: {
+                                text: "You'll be notified once your registration is approved!"
+                            }
+                        }]
+                    })
+                });
+                
+                console.log('✅ Sent DM to user with export code');
+            }
+        } catch (error) {
+            console.log('⚠️ Could not send DM to user:', error.message);
+        }
         
         return res.status(200).json({
             success: true,
-            message: 'Registration submitted successfully! Check your Discord DMs for your export code.'
+            message: 'Registration submitted successfully! Check your DMs and your private ticket channel.',
+            channel_id: ticketChannel.id
         });
         
     } catch (error) {
         console.error('Registration error:', error);
         console.error('Error stack:', error.stack);
         
-        return res.status(200).json({ 
-            success: true,
-            message: 'Registration received! Please use the export code due to a technical issue.',
+        return res.status(500).json({ 
+            success: false,
+            message: 'Registration failed. Please try again or use the export code.',
             use_export_code: true,
             error: error.message 
         });
