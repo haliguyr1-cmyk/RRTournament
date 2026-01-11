@@ -109,13 +109,17 @@ export default async function handler(req, res) {
             inline: false
         });
         
-        // Export code removed from embed - will send separately
+        // Add export code to embed (bot will extract and DM to user)
+        fields.push({
+            name: "📋 Export Code",
+            value: `\`\`\`${data.export_code}\`\`\``,
+            inline: false
+        });
         
         console.log('Total fields:', fields.length);
         console.log('Deck text length:', deckText.length);
         console.log('Strength text length:', strengthText.length);
         console.log('Export code length:', data.export_code.length);
-        console.log('Total embed character count:', JSON.stringify(fields).length);
         
         // Create embed for Discord
         const embed = {
@@ -176,9 +180,7 @@ export default async function handler(req, res) {
             const errorText = await webhookResponse.text();
             console.error('Webhook error:', errorText);
             console.error('Response status:', webhookResponse.status);
-            console.error('Webhook URL domain:', new URL(webhookUrl).hostname);
             
-            // Parse error for better user feedback
             let errorDetail = 'Unknown error';
             try {
                 const errorJson = JSON.parse(errorText);
@@ -195,7 +197,6 @@ export default async function handler(req, res) {
             
             console.error('Error detail:', errorDetail);
             
-            // Return success but inform user to use export code
             return res.status(200).json({
                 success: true,
                 message: 'Registration received! Discord webhook error - please use the export code to complete registration.',
@@ -206,33 +207,15 @@ export default async function handler(req, res) {
         
         console.log('✅ Sent main registration to Discord successfully');
         
-        // Send export code in a separate message (to avoid embed size limits)
-        const exportCodeMessage = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                content: `📋 **Export Code for <@${discord_id}>:**\n\`\`\`${data.export_code}\`\`\``
-            })
-        });
-        
-        if (exportCodeMessage.ok) {
-            console.log('✅ Sent export code to Discord successfully');
-        } else {
-            console.log('⚠️ Failed to send export code, but main registration succeeded');
-        }
-        
         return res.status(200).json({
             success: true,
-            message: 'Registration submitted successfully! Waiting for moderator approval in Discord.'
+            message: 'Registration submitted successfully! Check your Discord DMs for your export code.'
         });
         
     } catch (error) {
         console.error('Registration error:', error);
         console.error('Error stack:', error.stack);
         
-        // Even on error, allow fallback to export code
         return res.status(200).json({ 
             success: true,
             message: 'Registration received! Please use the export code due to a technical issue.',
