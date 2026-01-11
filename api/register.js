@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         }
         
         // Get bot token from environment variable
-        const botToken = process.env.DISCORD_BOT_TOKEN;
+        const botToken = process.env.DISCORD_TOKEN;
         
         if (!botToken) {
             console.log('No bot token configured');
