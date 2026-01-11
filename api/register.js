@@ -29,11 +29,23 @@ export default async function handler(req, res) {
         
         if (!webhookUrl) {
             console.log(`No webhook configured for guild ${guild_id}`);
+            console.log('Available env vars:', Object.keys(process.env).filter(k => k.startsWith('WEBHOOK_URL_')));
             
             // Still return success - user can use export code
             return res.status(200).json({
                 success: true,
                 message: 'Registration received! Use the export code to complete in Discord.',
+                use_export_code: true
+            });
+        }
+        
+        // Validate webhook URL format
+        if (!webhookUrl.startsWith('https://discord.com/api/webhooks/') && 
+            !webhookUrl.startsWith('https://discordapp.com/api/webhooks/')) {
+            console.error('Invalid webhook URL format:', webhookUrl.substring(0, 30) + '...');
+            return res.status(200).json({
+                success: true,
+                message: 'Registration received! Webhook configuration error - please use export code.',
                 use_export_code: true
             });
         }
@@ -62,7 +74,7 @@ export default async function handler(req, res) {
             `Total Strength: ${strength.totalStrength} ` +
             `Division: ${strength.division}`;
         
-        // Build fields array step by step
+        // Build fields array
         const fields = [];
         
         fields.push({ name: "👤 Discord User", value: `<@${discord_id}>`, inline: true });
@@ -97,17 +109,13 @@ export default async function handler(req, res) {
             inline: false
         });
         
-        // Add export code
-        fields.push({
-            name: "📋 Export Code",
-            value: `\`\`\`${data.export_code}\`\`\``,
-            inline: false
-        });
+        // Export code removed from embed - will send separately
         
         console.log('Total fields:', fields.length);
         console.log('Deck text length:', deckText.length);
         console.log('Strength text length:', strengthText.length);
         console.log('Export code length:', data.export_code.length);
+        console.log('Total embed character count:', JSON.stringify(fields).length);
         
         // Create embed for Discord
         const embed = {
@@ -149,8 +157,9 @@ export default async function handler(req, res) {
         ];
         
         console.log('Sending embed with', fields.length, 'fields');
+        console.log('Webhook URL (first 50 chars):', webhookUrl.substring(0, 50) + '...');
         
-        // Send to Discord webhook
+        // Send main registration to Discord webhook
         const webhookResponse = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -167,10 +176,52 @@ export default async function handler(req, res) {
             const errorText = await webhookResponse.text();
             console.error('Webhook error:', errorText);
             console.error('Response status:', webhookResponse.status);
-            throw new Error('Failed to send to Discord');
+            console.error('Webhook URL domain:', new URL(webhookUrl).hostname);
+            
+            // Parse error for better user feedback
+            let errorDetail = 'Unknown error';
+            try {
+                const errorJson = JSON.parse(errorText);
+                if (errorJson.code === 10015) {
+                    errorDetail = 'Webhook not found or deleted. Please recreate the webhook in Discord.';
+                } else if (errorJson.code === 50027) {
+                    errorDetail = 'Invalid webhook token. Please recreate the webhook in Discord.';
+                } else {
+                    errorDetail = errorJson.message || errorText;
+                }
+            } catch (e) {
+                errorDetail = errorText;
+            }
+            
+            console.error('Error detail:', errorDetail);
+            
+            // Return success but inform user to use export code
+            return res.status(200).json({
+                success: true,
+                message: 'Registration received! Discord webhook error - please use the export code to complete registration.',
+                use_export_code: true,
+                webhook_error: errorDetail
+            });
         }
         
-        console.log('✅ Sent to Discord successfully');
+        console.log('✅ Sent main registration to Discord successfully');
+        
+        // Send export code in a separate message (to avoid embed size limits)
+        const exportCodeMessage = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: `📋 **Export Code for <@${discord_id}>:**\n\`\`\`${data.export_code}\`\`\``
+            })
+        });
+        
+        if (exportCodeMessage.ok) {
+            console.log('✅ Sent export code to Discord successfully');
+        } else {
+            console.log('⚠️ Failed to send export code, but main registration succeeded');
+        }
         
         return res.status(200).json({
             success: true,
@@ -180,10 +231,13 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error('Registration error:', error);
         console.error('Error stack:', error.stack);
-        return res.status(500).json({ 
-            success: false,
-            error: 'Internal server error',
-            message: error.message 
+        
+        // Even on error, allow fallback to export code
+        return res.status(200).json({ 
+            success: true,
+            message: 'Registration received! Please use the export code due to a technical issue.',
+            use_export_code: true,
+            error: error.message 
         });
     }
 }
