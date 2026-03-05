@@ -36,7 +36,7 @@ export default async function handler(req, res) {
             });
         }
         
-        // Build deck text
+        // Build deck text — "1. Name - Lv X" format for _parse_cards()
         const deckText = data.cards.map((c, i) => 
             `${i+1}. ${c.name} - Lv ${c.level}`
         ).join('\n');
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
             pantheonText = ` Pantheon Bonuses: ${bonuses}`;
         }
         
-        // Build strength text
+        // Build strength text — must contain "Division: <name>" for _parse_division()
         const strength = data.strength;
         const strengthText = 
             `Base Crit: ${strength.baseCrit}% ` +
@@ -60,35 +60,38 @@ export default async function handler(req, res) {
             `Total Strength: ${strength.totalStrength} ` +
             `Division: ${strength.division}`;
         
+        // Hero item — "Name - Level X" format for _parse_hero_item()
+        let heroItemValue = 'None';
+        if (data.hero_item && data.hero_item !== 'None' && data.hero_item !== '') {
+            heroItemValue = data.hero_item_level
+                ? `${data.hero_item} - Level ${data.hero_item_level}`
+                : data.hero_item;
+        }
+
         // Build fields array
         const fields = [];
         
-        fields.push({ name: "👤 Discord User", value: `<@${discord_id}>`, inline: true });
-        fields.push({ name: "📝 Username", value: username || 'N/A', inline: true });
-        fields.push({ name: "🎮 Game Username", value: data.game_username, inline: true });
-        fields.push({ name: "🆔 Game ID", value: data.game_id, inline: true });
-        fields.push({ name: "🏛️ Community", value: data.community, inline: true });
-        fields.push({ name: "🕐 Timezone", value: data.timezone, inline: true });
-        fields.push({ name: "🦸 Hero", value: `${data.hero} (Lv ${data.hero_level})`, inline: true });
-        fields.push({ name: "🎯 Perks Level", value: data.perks_level.toString(), inline: true });
-        
-        // Add hero item if present
-        if (data.hero_item && data.hero_item !== 'None') {
-            fields.push({
-                name: "⭐ Hero Item",
-                value: `${data.hero_item} (Lv ${data.hero_item_level || 0})`,
-                inline: true
-            });
-        }
-        
-        // Add deck
+        // Field names must match what _get_field() looks up in browser_approval_handler.py
+        fields.push({ name: "👤 Discord User",      value: `<@${discord_id}>`,                  inline: true });
+        fields.push({ name: "📝 Username",           value: username || 'N/A',                   inline: true });
+        fields.push({ name: "🎮 Game Username",      value: data.game_username,                  inline: true });
+        fields.push({ name: "🆔 Game ID",            value: data.game_id,                        inline: true });
+        fields.push({ name: "🏛️ Community",          value: data.community,                      inline: true });
+        fields.push({ name: "🕐 Timezone",           value: data.timezone,                       inline: true });
+        fields.push({ name: "💥 Critical Damage",    value: `${data.crit_level}%`,               inline: true });
+        fields.push({ name: "📈 Legendarity",        value: String(data.legendarity || 0),       inline: true });
+        fields.push({ name: "🎯 Perks Level",        value: String(data.perks_level || 0),       inline: true });
+        fields.push({ name: "🦸 Hero",               value: `${data.hero} (Lv ${data.hero_level})`, inline: true });
+        fields.push({ name: "⭐ Hero Item",          value: heroItemValue,                       inline: true });
+
+        // Deck
         fields.push({
             name: "🃏 Deck (5 Cards)",
             value: deckText,
             inline: false
         });
         
-        // Add calculated strength
+        // Calculated Strength — contains "Division: X" for _parse_division()
         fields.push({
             name: "📊 Calculated Strength",
             value: strengthText,
@@ -105,16 +108,15 @@ export default async function handler(req, res) {
             fields: fields,
             timestamp: new Date().toISOString(),
             footer: {
+                // ✅ FIXED: Must match r'User ID[:\s]+(\d{17,20})' in _extract_discord_id()
                 text: `User ID: ${discord_id} | Source: Browser | Status: Pending`
             }
         };
         
-        // Step 1: Find the REGISTRATIONS category (exact match preferred)
+        // Step 1: Find the REGISTRATIONS category
         console.log('Fetching guild channels...');
         const channelsResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/channels`, {
-            headers: {
-                'Authorization': `Bot ${botToken}`
-            }
+            headers: { 'Authorization': `Bot ${botToken}` }
         });
         
         if (!channelsResponse.ok) {
@@ -124,12 +126,10 @@ export default async function handler(req, res) {
         const channels = await channelsResponse.json();
         console.log(`Found ${channels.length} channels`);
         
-        // Find REGISTRATIONS category - prioritize exact match
         let registrationCategory = channels.find(ch => 
             ch.type === 4 && ch.name === "REGISTRATIONS"
         );
         
-        // Fallback to case-insensitive match
         if (!registrationCategory) {
             registrationCategory = channels.find(ch => 
                 ch.type === 4 && 
@@ -151,48 +151,43 @@ export default async function handler(req, res) {
         
         // Step 2: Get roles for permissions
         const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/roles`, {
-            headers: {
-                'Authorization': `Bot ${botToken}`
-            }
+            headers: { 'Authorization': `Bot ${botToken}` }
         });
         
         const roles = rolesResponse.ok ? await rolesResponse.json() : [];
         const modRole = roles.find(r => r.name === "Moderator");
         const adminRole = roles.find(r => r.name === "Administrator");
         
-        // Step 3: Create ticket channel
-        const channelName = `web-${data.game_username}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-        
+        // Step 3: Build community+division abbreviations for channel name
+        // Look up abbreviation from community name (SS, EMP, RBS etc.)
+        const communityAbbrevMap = {
+            'Shinning Stars':  'SS',
+            'Shining Stars':   'SS',
+            'Empires Gaming':  'EMP',
+            'Ronin Gaming':    'RBS',
+        };
+        const divisionAbbrevMap = {
+            'Lightweight':       'LW',
+            'Cruiserweight':     'CW',
+            'Middleweight':      'MW',
+            'Heavyweight':       'HW',
+            'Super Heavyweight': 'SHW',
+            'Champion':          'CHAMP',
+        };
+        const commAbbrev = communityAbbrevMap[data.community] || data.community.substring(0, 3).toUpperCase();
+        const divAbbrev  = divisionAbbrevMap[strength.division] || 'UNK';
+        const channelName = `web-${commAbbrev}-${divAbbrev}-${data.game_username}`
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, '-')
+            .substring(0, 100);
+
         const permissionOverwrites = [
-            {
-                id: guild_id, // @everyone role
-                type: 0,
-                deny: "1024" // VIEW_CHANNEL
-            },
-            {
-                id: discord_id, // The user
-                type: 1,
-                allow: "3072" // VIEW_CHANNEL + SEND_MESSAGES
-            }
+            { id: guild_id, type: 0, deny: "1024" },        // @everyone deny VIEW
+            { id: discord_id, type: 1, allow: "3072" }      // user allow VIEW+SEND
         ];
         
-        // Add mod role if exists
-        if (modRole) {
-            permissionOverwrites.push({
-                id: modRole.id,
-                type: 0,
-                allow: "3072"
-            });
-        }
-        
-        // Add admin role if exists
-        if (adminRole) {
-            permissionOverwrites.push({
-                id: adminRole.id,
-                type: 0,
-                allow: "3072"
-            });
-        }
+        if (modRole)   permissionOverwrites.push({ id: modRole.id,   type: 0, allow: "3072" });
+        if (adminRole) permissionOverwrites.push({ id: adminRole.id, type: 0, allow: "3072" });
         
         console.log(`Creating ticket channel: ${channelName}`);
         
@@ -204,7 +199,7 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 name: channelName,
-                type: 0, // Text channel
+                type: 0,
                 parent_id: registrationCategory.id,
                 permission_overwrites: permissionOverwrites
             })
@@ -219,22 +214,23 @@ export default async function handler(req, res) {
         const ticketChannel = await createChannelResponse.json();
         console.log(`✅ Created ticket channel: ${ticketChannel.name} (${ticketChannel.id})`);
         
-        // Step 4: Post registration to ticket channel with buttons
+        // Step 4: Post registration embed with buttons
+        // ✅ FIXED: custom_ids must match BrowserApprovalView in browser_approval_handler.py
         const components = [
             {
                 type: 1,
                 components: [
                     {
                         type: 2,
-                        style: 3,
+                        style: 3,       // green
                         label: "Approve",
-                        custom_id: "approve_browser_reg"
+                        custom_id: "browser_approve"   // ✅ matches BrowserApprovalView
                     },
                     {
                         type: 2,
-                        style: 4,
+                        style: 4,       // red
                         label: "Deny",
-                        custom_id: "reject_browser_reg"
+                        custom_id: "browser_reject"    // ✅ matches BrowserApprovalView
                     }
                 ]
             },
@@ -242,17 +238,17 @@ export default async function handler(req, res) {
                 type: 1,
                 components: [
                     {
-                        type: 3, // Select menu
+                        type: 3,
                         custom_id: "division_override_browser",
-                        placeholder: "Override Division (optional)",
+                        placeholder: "Keep Current Division",
                         options: [
                             { label: "Keep Current Division", value: "none", default: true },
-                            { label: "Lightweight", value: "Lightweight" },
-                            { label: "Cruiserweight", value: "Cruiserweight" },
-                            { label: "Middleweight", value: "Middleweight" },
-                            { label: "Heavyweight", value: "Heavyweight" },
-                            { label: "Super Heavyweight", value: "Super Heavyweight" },
-                            { label: "Champion", value: "Champion" }
+                            { label: "Lightweight",      value: "Lightweight" },
+                            { label: "Cruiserweight",    value: "Cruiserweight" },
+                            { label: "Middleweight",     value: "Middleweight" },
+                            { label: "Heavyweight",      value: "Heavyweight" },
+                            { label: "Super Heavyweight",value: "Super Heavyweight" },
+                            { label: "Champion",         value: "Champion" }
                         ]
                     }
                 ]
@@ -279,7 +275,7 @@ export default async function handler(req, res) {
             console.log('✅ Posted registration to ticket channel');
         }
         
-        // Add "Export My Settings" button
+        // Export settings button
         await fetch(`https://discord.com/api/v10/channels/${ticketChannel.id}/messages`, {
             method: 'POST',
             headers: {
@@ -301,9 +297,9 @@ export default async function handler(req, res) {
             })
         });
         
-        // Step 5: Ping moderators/admins
+        // Ping moderators/admins
         let pingMessage = '🔔 New browser registration to review!';
-        if (modRole) pingMessage += ` <@&${modRole.id}>`;
+        if (modRole)   pingMessage += ` <@&${modRole.id}>`;
         if (adminRole) pingMessage += ` <@&${adminRole.id}>`;
         
         await fetch(`https://discord.com/api/v10/channels/${ticketChannel.id}/messages`, {
@@ -312,12 +308,10 @@ export default async function handler(req, res) {
                 'Authorization': `Bot ${botToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                content: pingMessage
-            })
+            body: JSON.stringify({ content: pingMessage })
         });
         
-        // Step 6: DM the user with export code
+        // DM the user with export code
         try {
             const dmChannelResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
                 method: 'POST',
@@ -325,9 +319,7 @@ export default async function handler(req, res) {
                     'Authorization': `Bot ${botToken}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    recipient_id: discord_id
-                })
+                body: JSON.stringify({ recipient_id: discord_id })
             });
             
             if (dmChannelResponse.ok) {
@@ -351,9 +343,7 @@ export default async function handler(req, res) {
                                     inline: false
                                 }
                             ],
-                            footer: {
-                                text: "You'll be notified once your registration is approved!"
-                            }
+                            footer: { text: "You'll be notified once your registration is approved!" }
                         }]
                     })
                 });
