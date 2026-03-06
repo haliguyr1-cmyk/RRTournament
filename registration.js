@@ -2,26 +2,20 @@
 
 // ============================================================================
 // DYNAMIC PANTHEON
-// Fetches live values from TournamentBot's /api/pantheon endpoint.
-// Set BOT_API_URL in Vercel environment variables to your bot's public URL
-// (e.g. an ngrok URL or your home IP:5000 if port-forwarded).
-// Falls back to the hardcoded map below if the fetch fails or BOT_API_URL is unset.
 // ============================================================================
 
 let PANTHEON_BONUSES = {
-    "Twilight Ranger": 0.15,  // +15%
-    "Franky & Stein":  0.15,  // +15%
-    "Twins":           0.15,  // +15%
-    "Valkerie":        0.15,  // +15%
-    "Wukong":          0.30,  // +30% (newest)
-    // Phoenix removed — was oldest unit
-    // Update these values using /pantheon_add when a new unit joins
+    "Twilight Ranger": 0.15,
+    "Franky & Stein":  0.15,
+    "Twins":           0.15,
+    "Valkerie":        0.15,
+    "Wukong":          0.30,
 };
 
 async function loadPantheonBonuses(guild_id) {
     try {
         const botUrl = window._BOT_API_URL || null;
-        if (!botUrl) return; // use hardcoded fallback silently
+        if (!botUrl) return;
 
         const url = `${botUrl}/api/pantheon?guild_id=${guild_id || 0}`;
         const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
@@ -113,17 +107,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     generateCardInputs();
     populateHeroItems();
     attachEventListeners();
-    // Load live pantheon after guild_id is known
     if (formData.guild_id) {
         await loadPantheonBonuses(formData.guild_id);
     }
 });
 
 function populateURLParams() {
-    const params    = new URLSearchParams(window.location.search);
+    const params     = new URLSearchParams(window.location.search);
     const discord_id = params.get('discord_id');
-    const username  = params.get('username');
-    const guild_id  = params.get('guild_id');
+    const username   = params.get('username');
+    const guild_id   = params.get('guild_id');
 
     if (discord_id) {
         document.getElementById('discord_id').value = discord_id;
@@ -237,9 +230,16 @@ function updateDisabledCards() {
 function loadCommunities() {
     const communitySelect = document.getElementById('community');
     const communities = [
-        { name: 'Shinning Stars', emoji: '🌟' },
+        { name: 'Shining Stars',  emoji: '🌟' },
         { name: 'Empires Gaming', emoji: '🦁' },
-        { name: 'Ronin Gaming',   emoji: '🥷' }
+        { name: 'Apoc4lipse',     emoji: '🔥' },
+        { name: 'Quack Pack',     emoji: '🦆' },
+        { name: 'Lord Gunko',     emoji: '⚔️' },
+        { name: 'LRT',            emoji: '🚀' },
+        { name: 'Nompies',        emoji: '🎮' },
+        { name: 'Moes Tavern',    emoji: '🍺' },
+        { name: 'SE7ENS',         emoji: '7️⃣' },
+        { name: 'Smile & Wave',   emoji: '👋' },
     ];
     communitySelect.innerHTML = '<option value="">Select community...</option>';
     communities.forEach(comm => {
@@ -262,8 +262,8 @@ function handleCommunityChange() {
     if (helper)   helper.remove();
 
     if (select.value === '__OTHER__') {
-        const input    = document.createElement('input');
-        input.type     = 'text'; input.id = 'custom-community-input';
+        const input       = document.createElement('input');
+        input.type        = 'text'; input.id = 'custom-community-input';
         input.placeholder = 'Enter your community name';
         input.className   = 'w-full p-3 border-2 rounded-lg focus:border-blue-500 outline-none mt-2';
         input.required    = true; input.maxLength = 50;
@@ -324,8 +324,8 @@ function calculateAndDisplayStrength() {
         }
     });
 
-    const adjustedCrit   = Math.floor(baseCrit * (1 + pantheonBonus));
-    const totalStrength  = Math.floor(
+    const adjustedCrit  = Math.floor(baseCrit * (1 + pantheonBonus));
+    const totalStrength = Math.floor(
         (adjustedCrit   * DEFAULT_WEIGHTS.crit) +
         (legendarity    * DEFAULT_WEIGHTS.legendarity) +
         (perks          * DEFAULT_WEIGHTS.perks)
@@ -384,7 +384,6 @@ async function handleFormSubmit(e) {
     if (formData.cards.some(c => !c.name || !c.level)) { showAlert('Please complete all 5 cards in your deck!', 'error'); return; }
     if (!calculatedStrength || !calculatedStrength.division) { showAlert('Invalid stats! Please check your values.', 'error'); return; }
 
-    // Reload pantheon just before submit to ensure latest values
     await loadPantheonBonuses(formData.guild_id);
     calculateAndDisplayStrength();
 
@@ -398,23 +397,23 @@ async function handleFormSubmit(e) {
     const exportString = parts.join(',');
 
     const submissionData = {
-        discord_id:     formData.discord_id,
-        username:       formData.username,
-        guild_id:       formData.guild_id,
-        game_username:  formData.game_username,
-        game_id:        formData.game_id,
-        crit_level:     parseInt(formData.crit_level),
-        legendarity:    parseInt(formData.legendarity),
-        perks_level:    parseInt(formData.perks_level),
-        timezone:       formData.timezone,
-        community:      formData.community,
-        hero:           formData.hero,
-        hero_level:     parseInt(formData.hero_level),
-        hero_item:      formData.hero_item || null,
+        discord_id:      formData.discord_id,
+        username:        formData.username,
+        guild_id:        formData.guild_id,
+        game_username:   formData.game_username,
+        game_id:         formData.game_id,
+        crit_level:      parseInt(formData.crit_level),
+        legendarity:     parseInt(formData.legendarity),
+        perks_level:     parseInt(formData.perks_level),
+        timezone:        formData.timezone,
+        community:       formData.community,
+        hero:            formData.hero,
+        hero_level:      parseInt(formData.hero_level),
+        hero_item:       formData.hero_item || null,
         hero_item_level: formData.hero_item_level ? parseInt(formData.hero_item_level) : null,
-        cards:          formData.cards,
-        strength:       calculatedStrength,
-        export_code:    exportString
+        cards:           formData.cards,
+        strength:        calculatedStrength,
+        export_code:     exportString
     };
 
     try {
@@ -436,8 +435,8 @@ async function handleFormSubmit(e) {
 }
 
 function showSuccessModal(exportCode) {
-    const modal    = document.getElementById('success-modal');
-    const statsDiv = document.getElementById('success-stats');
+    const modal     = document.getElementById('success-modal');
+    const statsDiv  = document.getElementById('success-stats');
     const exportDiv = document.getElementById('export-code');
     statsDiv.innerHTML = `
         <div><p class="opacity-80 text-sm">Base Crit</p><p class="text-xl font-bold">${calculatedStrength.baseCrit}%</p></div>
@@ -483,7 +482,7 @@ function showImportModal()  { document.getElementById('import-modal').classList.
 function hideImportModal()  { document.getElementById('import-modal').classList.add('hidden'); document.getElementById('import-code-input').value = ''; }
 
 function importCode() {
-    const code  = document.getElementById('import-code-input').value.trim();
+    const code = document.getElementById('import-code-input').value.trim();
     if (!code) { showAlert('Please paste an export code first!', 'error'); return; }
     try {
         const parts = code.split(',').map(p => p.trim());
@@ -497,12 +496,20 @@ function importCode() {
 
         const commSel = document.getElementById('community');
         let found = false;
-        for (let opt of commSel.options) { if (opt.value === parts[6]) { commSel.value = parts[6]; formData.community = parts[6]; found = true; break; } }
-        if (!found) { commSel.value = '__OTHER__'; handleCommunityChange(); setTimeout(() => { const ci = document.getElementById('custom-community-input'); if (ci) { ci.value = parts[6]; formData.community = parts[6]; } }, 100); }
+        for (let opt of commSel.options) {
+            if (opt.value === parts[6]) { commSel.value = parts[6]; formData.community = parts[6]; found = true; break; }
+        }
+        if (!found) {
+            commSel.value = '__OTHER__'; handleCommunityChange();
+            setTimeout(() => { const ci = document.getElementById('custom-community-input'); if (ci) { ci.value = parts[6]; formData.community = parts[6]; } }, 100);
+        }
 
         document.getElementById('hero').value       = parts[7]; formData.hero       = parts[7]; handleHeroChange();
         document.getElementById('hero_level').value = parts[8]; formData.hero_level = parts[8];
-        if (parts[9] && parts[9] !== 'None') { document.getElementById('hero_item').value = parts[9]; formData.hero_item = parts[9]; if (parts[10] && parts[10] !== '0') { document.getElementById('hero_item_level').value = parts[10]; formData.hero_item_level = parts[10]; } }
+        if (parts[9] && parts[9] !== 'None') {
+            document.getElementById('hero_item').value = parts[9]; formData.hero_item = parts[9];
+            if (parts[10] && parts[10] !== '0') { document.getElementById('hero_item_level').value = parts[10]; formData.hero_item_level = parts[10]; }
+        }
 
         for (let i = 0; i < 5; i++) {
             const ni = 11 + (i * 2), li = 12 + (i * 2);
